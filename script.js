@@ -1529,5 +1529,231 @@ function debounce(fn, delay) {
   };
 }
 
+// ========== Toast ==========
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  if (!toast) return;
+  toast.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => toast.classList.remove('show'), 2000);
+}
+
+// ========== API 面板 ==========
+const apiPanel = document.getElementById('apiPanel');
+const apiToggleBtn = document.getElementById('apiToggleBtn');
+const apiUrl = document.getElementById('apiUrl');
+const apiKey = document.getElementById('apiKey');
+const modelSelect = document.getElementById('modelSelect');
+const modelInput = document.getElementById('modelInput');
+const apiStatus = document.getElementById('apiStatus');
+const presetSelect = document.getElementById('presetSelect');
+
+// 面板折叠/展开
+apiToggleBtn.addEventListener('click', () => {
+  const isOpen = apiPanel.classList.contains('expanded');
+  if (isOpen) {
+    apiPanel.classList.remove('expanded');
+    apiPanel.classList.add('collapsed');
+    apiToggleBtn.classList.remove('active');
+  } else {
+    apiPanel.classList.remove('collapsed');
+    apiPanel.classList.add('expanded');
+    apiToggleBtn.classList.add('active');
+    loadPresetList();
+  }
+});
+
+// 显示/隐藏 Key
+document.getElementById('toggleKeyBtn').addEventListener('click', () => {
+  const inp = apiKey;
+  const btn = document.getElementById('toggleKeyBtn');
+  if (inp.type === 'password') {
+    inp.type = 'text'; btn.textContent = '🙈';
+  } else {
+    inp.type = 'password'; btn.textContent = '👁';
+  }
+});
+
+// modelSelect 同步到 modelInput
+modelSelect.addEventListener('change', () => {
+  if (modelSelect.value) modelInput.value = modelSelect.value;
+});
+modelInput.addEventListener('input', () => {
+  const opt = [...modelSelect.options].find(o => o.value === modelInput.value);
+  if (opt) modelSelect.value = modelInput.value;
+});
+
+// 获取当前模型名
+function getModel() { return modelInput.value.trim() || modelSelect.value || ''; }
+
+// 拉取模型列表
+document.getElementById('fetchModelsBtn').addEventListener('click', async () => {
+  const url = apiUrl.value.trim();
+  const key = apiKey.value.trim();
+  if (!url || !key) { showToast('请先填写 API 地址和 Key'); return; }
+  const baseUrl = url.replace(/\/chat\/completions\/?$/, '').replace(/\/v1\/?$/, '');
+  const modelsUrl = baseUrl + '/v1/models';
+  apiStatus.className = 'api-status loading';
+  apiStatus.textContent = '正在拉取模型列表...';
+  try {
+    const res = await fetch(modelsUrl, { headers: { 'Authorization': 'Bearer ' + key } });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const models = (data.data || []).map(m => m.id).filter(id => !id.includes('whisper') && !id.includes('tts') && !id.includes('dall-e') && !id.includes('embedding'));
+    modelSelect.innerHTML = '<option value="">手动输入或选择模型</option>' + models.map(m => `<option value="${m}">${m}</option>`).join('');
+    apiStatus.className = 'api-status success';
+    apiStatus.textContent = '拉取成功，共 ' + models.length + ' 个模型';
+    showToast('已拉取 ' + models.length + ' 个模型');
+  } catch (e) {
+    apiStatus.className = 'api-status error';
+    apiStatus.textContent = '拉取失败: ' + e.message;
+    showToast('拉取模型失败');
+  }
+});
+
+// 测试连接
+document.getElementById('testApiBtn').addEventListener('click', async () => {
+  const url = apiUrl.value.trim();
+  const key = apiKey.value.trim();
+  const model = getModel();
+  if (!url || !key) { showToast('请填写 API 地址和 Key'); return; }
+  apiStatus.className = 'api-status loading';
+  apiStatus.textContent = '测试中...';
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+      body: JSON.stringify({ model: model || 'gpt-3.5-turbo', messages: [{ role: 'user', content: 'hi' }], max_tokens: 5 })
+    });
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error('HTTP ' + res.status + ': ' + err.substring(0, 100));
+    }
+    apiStatus.className = 'api-status success';
+    apiStatus.textContent = '连接成功！模型: ' + (model || '默认');
+    showToast('API 连接成功');
+  } catch (e) {
+    apiStatus.className = 'api-status error';
+    apiStatus.textContent = '连接失败: ' + e.message;
+    showToast('连接失败');
+  }
+});
+
+// ========== 预设管理 ==========
+const STORAGE_KEY = 'api_presets';
+
+function getPresets() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; }
+}
+function savePresets(list) { localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); }
+
+function loadPresetList() {
+  const presets = getPresets();
+  presetSelect.innerHTML = '<option value="">-- 选择预设 --</option>' + presets.map((p, i) => `<option value="${i}">${p.name}</option>`).join('');
+}
+
+// 选择预设加载
+presetSelect.addEventListener('change', () => {
+  const idx = presetSelect.value;
+  if (idx === '') return;
+  const presets = getPresets();
+  const p = presets[parseInt(idx)];
+  if (!p) return;
+  apiUrl.value = p.url || '';
+  apiKey.value = p.key || '';
+  modelInput.value = p.model || '';
+  modelSelect.value = '';
+  showToast('已加载预设: ' + p.name);
+});
+
+// 保存预设
+document.getElementById('savePresetBtn').addEventListener('click', () => {
+  const url = apiUrl.value.trim();
+  const key = apiKey.value.trim();
+  const model = getModel();
+  if (!url || !key) { showToast('请填写 API 地址和 Key 后保存'); return; }
+  const name = prompt('预设名称（例如：我的GPT-4o、公司Claude）:', model || '未命名');
+  if (!name) return;
+  const presets = getPresets();
+  presets.push({ name, url, key, model, savedAt: new Date().toISOString() });
+  savePresets(presets);
+  loadPresetList();
+  showToast('已保存预设: ' + name);
+});
+
+// 删除预设
+document.getElementById('deletePresetBtn').addEventListener('click', () => {
+  const idx = presetSelect.value;
+  if (idx === '') { showToast('请先选择一个预设'); return; }
+  const presets = getPresets();
+  const p = presets[parseInt(idx)];
+  if (!confirm('确定删除预设「' + p.name + '」？')) return;
+  presets.splice(parseInt(idx), 1);
+  savePresets(presets);
+  loadPresetList();
+  showToast('已删除预设');
+});
+
+// ========== 复制/下载详情 ==========
+document.getElementById('copyDetailBtn').addEventListener('click', () => {
+  if (!currentAuthor) { showToast('请先选择一位作家'); return; }
+  const text = buildInstructionText(currentAuthor);
+  navigator.clipboard.writeText(text).then(() => showToast('已复制到剪贴板')).catch(() => showToast('复制失败'));
+});
+
+document.getElementById('downloadDetailBtn').addEventListener('click', () => {
+  if (!currentAuthor) { showToast('请先选择一位作家'); return; }
+  const text = buildInstructionText(currentAuthor);
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = '文风指令_' + currentAuthor.name + '.txt';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('下载成功');
+});
+
+function buildInstructionText(author) {
+  const chars = author.characteristics.split('；').filter(c => c.trim());
+  let text = '文风指令：' + author.name + '风格\n\n';
+  text += '一、风格定义\n你是一位擅长「' + author.name + '」风格的写作者。\n';
+  text += author.style + '\n\n';
+  text += '二、写作特征\n';
+  chars.forEach((c, i) => { text += (i + 1) + '. ' + c.trim() + '\n'; });
+  text += '\n三、参考范例\n"' + author.example + '"\n—— ' + author.exampleSource + '\n\n';
+  text += '四、避免事项\n' + author.avoid + '\n';
+  return text;
+}
+
+// ========== 预设模板 ==========
+const presetsData = {
+  xiaohongshu: { name: '小红书种草风', style: '活泼亲切、emoji丰富、突出体验感', characteristics: '大量使用emoji表情、口语化表达、第一人称视角、感叹号收尾、突出个人体验感；善用短句，每段不超过三行；封面图+标题的极致吸引力法则；"姐妹们"等亲密称呼建立信任感；实用信息密度高（价格/地址/时间）；结尾必带话题标签矩阵', avoid: '避免正式书面语、避免长段落、避免说教感' },
+  academic: { name: '学术论文风', style: '严谨客观、逻辑清晰、引用规范', characteristics: '客观陈述、逻辑严密、引用规范、避免主观判断、使用专业术语；"先问是不是再问为什么"的批判性思维；数据与案例支撑每一个观点；段落分明层次清晰如论文结构；结论处留开放式讨论空间；避免绝对化用词', avoid: '避免口语化表达、避免夸张修辞、避免无数据支撑的观点' },
+  storytelling: { name: '故事叙述风', style: '画面感强、情感真挚、节奏起伏', characteristics: '画面感强、细节描写丰富、情感真挚、节奏张弛有度、善用比喻和通感；第一人称或第三人称限知视角；用具体场景代替抽象描述；对话与叙述交替推进情节；结尾留白给读者想象空间；在平凡日常生活中发现诗意', avoid: '避免平铺直叙、避免说教、避免过度抽象' },
+  marketing: { name: '营销文案风', style: '抓住痛点、突出卖点、号召行动', characteristics: '抓住用户痛点、突出产品卖点、制造紧迫感、强有力的行动号召（CTA）、短句为主；数字与具体结果的展示；社会证明（用户评价、销量数据）；对比法突出产品优势；标题即转化率——悬念/数字/反差/共鸣', avoid: '避免冗长介绍、避免技术术语堆砌、避免模糊表达' }
+};
+
+document.getElementById('presetsGrid').addEventListener('click', (e) => {
+  const card = e.target.closest('.preset-card');
+  if (!card) return;
+  const key = card.dataset.preset;
+  const p = presetsData[key];
+  if (!p) return;
+  // 创建一个临时作者对象来显示
+  const tempAuthor = {
+    id: 'preset_' + key, name: p.name, nameEn: 'Preset', region: '中国', era: '互联网时代',
+    style: p.style, characteristics: p.characteristics, example: '（请参考写作特征进行创作）',
+    exampleSource: '快速模板', avoid: p.avoid
+  };
+  currentAuthor = tempAuthor;
+  renderAuthorDetail();
+  document.querySelectorAll('.author-item').forEach(el => el.classList.remove('active'));
+  showToast('已加载模板: ' + p.name);
+});
+
+// ========== 页面加载时恢复预设列表 ==========
+loadPresetList();
+
 // ========== 启动 ==========
 document.addEventListener('DOMContentLoaded', init);

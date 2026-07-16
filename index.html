@@ -9,131 +9,83 @@
 <body>
   <div class="container">
     <header class="header">
-      <h1>文风指令生成器</h1>
-      <p class="subtitle">快速生成结构化的写作风格指令，可用于 AI 提示词或内容创作指南</p>
+      <div class="header-left">
+        <h1>文风指令生成器</h1>
+        <p class="subtitle">浏览 109 位作家/平台/影视风格，一键生成写作指令</p>
+      </div>
+      <button id="apiToggleBtn" class="api-toggle-btn" title="API 配置">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+        </svg>
+      </button>
     </header>
 
+    <!-- API 配置面板（隐藏） -->
+    <section id="apiPanel" class="api-panel collapsed">
+      <div class="api-panel-inner">
+        <div class="api-row">
+          <div class="form-group api-flex">
+            <label for="apiUrl">API 地址</label>
+            <input type="text" id="apiUrl" placeholder="https://api.openai.com/v1/chat/completions">
+          </div>
+          <div class="form-group api-flex">
+            <label for="apiKey">API Key</label>
+            <div class="api-key-row">
+              <input type="password" id="apiKey" placeholder="sk-...">
+              <button id="toggleKeyBtn" class="btn-sm" title="显示/隐藏">👁</button>
+            </div>
+          </div>
+        </div>
+        <div class="api-row">
+          <div class="form-group api-flex">
+            <label for="modelSelect">模型</label>
+            <div class="model-row">
+              <select id="modelSelect"><option value="">手动输入或点击拉取</option></select>
+              <input type="text" id="modelInput" placeholder="gpt-4o / claude-3.5-sonnet / deepseek-chat" class="model-input">
+            </div>
+          </div>
+          <div class="form-group api-preset">
+            <label for="presetSelect">已保存预设</label>
+            <div class="preset-row">
+              <select id="presetSelect"><option value="">-- 选择预设 --</option></select>
+              <button id="deletePresetBtn" class="btn-sm btn-danger" title="删除预设">🗑</button>
+            </div>
+          </div>
+        </div>
+        <div class="api-actions">
+          <button id="fetchModelsBtn" class="btn-outline">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            拉取模型
+          </button>
+          <button id="testApiBtn" class="btn-outline">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20,6 9,17 4,12"/></svg>
+            测试连接
+          </button>
+          <button id="savePresetBtn" class="btn-outline">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+            保存预设
+          </button>
+        </div>
+        <div id="apiStatus" class="api-status"></div>
+      </div>
+    </section>
+
+    <!-- 主布局 -->
     <div class="main-layout">
-      <!-- 左侧：输入区 -->
-      <section class="panel input-panel">
-        <h2>配置参数</h2>
-
-        <div class="form-group">
-          <label for="styleName">风格名称 <span class="required">*</span></label>
-          <input type="text" id="styleName" placeholder="例如：温暖治愈风、学术严谨风、小红书种草风" maxlength="50">
-        </div>
-
-        <div class="form-group">
-          <label for="tone">语气基调</label>
-          <div class="select-wrapper">
-            <select id="tone">
-              <option value="">-- 请选择 --</option>
-              <option value="正式严谨">正式严谨</option>
-              <option value="轻松活泼">轻松活泼</option>
-              <option value="温暖治愈">温暖治愈</option>
-              <option value="犀利幽默">犀利幽默</option>
-              <option value="冷静理性">冷静理性</option>
-              <option value="激情澎湃">激情澎湃</option>
-              <option value="文艺清新">文艺清新</option>
-              <option value="朴实真诚">朴实真诚</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="audience">目标受众</label>
-          <input type="text" id="audience" placeholder="例如：大学生、职场新人、宝妈群体" maxlength="50">
-        </div>
-
-        <div class="form-group">
-          <label for="contentType">内容类型</label>
-          <div class="select-wrapper">
-            <select id="contentType">
-              <option value="">-- 请选择 --</option>
-              <option value="自媒体文章">自媒体文章</option>
-              <option value="学术论文">学术论文</option>
-              <option value="产品文案">产品文案</option>
-              <option value="社交媒体帖子">社交媒体帖子</option>
-              <option value="小说创作">小说创作</option>
-              <option value="商业报告">商业报告</option>
-              <option value="演讲稿">演讲稿</option>
-              <option value="教程/指南">教程/指南</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="characteristics">关键特征</label>
-          <textarea id="characteristics" rows="3" placeholder="例如：多用短句、善用比喻、第一人称视角、大量使用emoji"></textarea>
-        </div>
-
-        <div class="form-group">
-          <label for="reference">参考范例</label>
-          <textarea id="reference" rows="3" placeholder="粘贴一段你喜欢的文字作为风格参考..."></textarea>
-        </div>
-
-        <div class="form-group">
-          <label for="avoid">避免事项</label>
-          <textarea id="avoid" rows="2" placeholder="例如：避免使用长难句、避免过于口语化、避免使用专业术语"></textarea>
-        </div>
-
-        <button id="generateBtn" class="btn-primary">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polygon points="5,3 19,12 5,21 5,3"/>
-          </svg>
-          生成指令
-        </button>
-      </section>
-
-      <!-- 右侧：输出区 -->
-      <section class="panel output-panel">
-        <div class="output-header">
-          <h2>生成的文风指令</h2>
-          <div class="output-actions">
-            <button id="copyBtn" class="btn-icon" title="复制">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-              </svg>
-            </button>
-            <button id="downloadBtn" class="btn-icon" title="下载">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="7,10 12,15 17,10"/>
-                <line x1="12" y1="15" x2="12" y2="3"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-        <div id="outputContent" class="output-content">
-          <div class="placeholder">
-            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" opacity="0.3">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-              <polyline points="14,2 14,8 20,8"/>
-              <line x1="16" y1="13" x2="8" y2="13"/>
-              <line x1="16" y1="17" x2="8" y2="17"/>
-              <polyline points="10,9 9,9 8,9"/>
-            </svg>
-            <p>在左侧填写参数后点击「生成指令」</p>
-          </div>
-        </div>
-      </section>
-    </div>
-
-    <!-- 作家文风库 -->
-    <section class="authors-section">
-      <div class="authors-header">
-        <h2>作家文风库</h2>
-        <div class="authors-toolbar">
+      <!-- 左侧：作家列表 -->
+      <section class="panel list-panel">
+        <div class="list-toolbar">
           <div class="search-wrapper">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="11" cy="11" r="8"/>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
-            <input type="text" id="authorSearch" placeholder="搜索作家名、风格特点、年代...">
+            <input type="text" id="searchInput" placeholder="搜索作家、风格、年代...">
           </div>
-          <div class="select-wrapper">
-            <select id="authorRegion">
+        </div>
+        <div class="list-filters">
+          <div class="select-wrapper select-sm">
+            <select id="regionFilter">
               <option value="all">全部分类</option>
               <option value="中国文学">中国文学</option>
               <option value="日本文学">日本文学</option>
@@ -145,13 +97,59 @@
               <option value="影视动漫">影视动漫</option>
             </select>
           </div>
-          <span class="author-count">共 <strong id="authorCount">0</strong> 位</span>
+          <div class="select-wrapper select-sm">
+            <select id="eraFilter">
+              <option value="all">全部年代</option>
+              <option value="17世纪">17世纪</option>
+              <option value="19世纪">19世纪</option>
+              <option value="近代">近代</option>
+              <option value="现代">现代</option>
+              <option value="20世纪">20世纪</option>
+              <option value="当代">当代</option>
+              <option value="互联网时代">互联网时代</option>
+            </select>
+          </div>
+          <div class="select-wrapper select-sm">
+            <select id="categoryFilter">
+              <option value="all">全部类型</option>
+              <option value="中国文学">文学作家</option>
+              <option value="平台文风">平台文风</option>
+              <option value="影视动漫">影视动漫</option>
+            </select>
+          </div>
         </div>
-      </div>
-      <div class="authors-grid" id="authorGrid"></div>
-    </section>
+        <div id="authorList" class="author-list"></div>
+      </section>
 
-    <!-- 预设模板 -->
+      <!-- 右侧：详情 / 指令输出 -->
+      <section class="panel detail-panel">
+        <div class="detail-header-row">
+          <h2>作家详情</h2>
+          <div class="output-actions">
+            <button id="copyDetailBtn" class="btn-icon" title="复制指令">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+            </button>
+            <button id="downloadDetailBtn" class="btn-icon" title="下载">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div id="authorDetail" class="detail-content">
+          <div class="empty-state">
+            <div class="empty-icon">📖</div>
+            <p>请从左侧列表选择一位作家</p>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- 快速模板 -->
     <section class="presets-section">
       <h2>快速模板</h2>
       <div class="presets-grid" id="presetsGrid">
