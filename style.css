@@ -556,6 +556,36 @@ body {
   color: #9d174d;
 }
 
+.region-eu {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+.region-latam {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.region-asia {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
+.region-africa {
+  background: #ffedd5;
+  color: #9a3412;
+}
+
+.region-platform {
+  background: #f3e8ff;
+  color: #6b21a8;
+}
+
+.region-anime {
+  background: #fce7f3;
+  color: #be185d;
+}
+
 .author-meta {
   font-size: 0.75rem;
   color: var(--text-muted);

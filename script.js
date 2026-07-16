@@ -788,6 +788,584 @@ const authors = [
     example: 'Reading is like thinking, like praying, like talking to a friend, like expressing your ideas, like listening to other people\'s ideas, like listening to music, like looking at a view, like taking a walk on the beach.',
     exampleSource: '《2666》',
     avoid: '避免线性叙事、避免回避暴力、避免简单结构'
+  },
+
+  // ========== 平台文风 ==========
+  {
+    id: 'zhihu',
+    name: '知乎体',
+    nameEn: 'Zhihu Style',
+    region: '中国',
+    era: '互联网时代',
+    category: '平台文风',
+    style: '理性分析、先问是不是再问为什么、谢邀体',
+    characteristics: '开篇经典句式"谢邀。人在XX，刚下飞机"、先质疑问题前提再展开分析、分段清晰逻辑严密如论文、善用数据与案例支撑观点、行业内部人士视角增加可信度、结尾总结升华或留开放式讨论',
+    example: '谢邀。人在美国，刚下飞机。这个问题很有意思，我先说结论：不能。然后我们来看为什么。第一，从数据上看...第二，从行业惯例来看...第三，从逻辑上推导...综上，我的建议是...以上，欢迎讨论。',
+    exampleSource: '知乎经典答题范式',
+    avoid: '避免情绪化表达、避免无数据支撑的观点、避免短回答'
+  },
+  {
+    id: 'douban',
+    name: '豆瓣体',
+    nameEn: 'Douban Style',
+    region: '中国',
+    era: '互联网时代',
+    category: '平台文风',
+    style: '文艺评论、细腻感受、评分体系',
+    characteristics: '对文艺作品的高度敏感与细腻解读、善用通感将抽象感受具象化、私人化的情感表达与普遍性共鸣并存、评价体系（五星制）融入叙事、引经据典但不过度炫技、克制的煽情——用细节打动而非口号',
+    example: '看完这部电影，我坐在黑暗里很久没有动。那种感觉就像有人在你心口轻轻放了一片羽毛，不疼，但你知道它在那里。四星给电影，一星留给今晚的失眠。',
+    exampleSource: '豆瓣影评典型风格',
+    avoid: '避免粗暴评判、避免商业话术、避免缺乏个人感受的客观'
+  },
+  {
+    id: 'weibo',
+    name: '微博体',
+    nameEn: 'Weibo Style',
+    region: '中国',
+    era: '互联网时代',
+    category: '平台文风',
+    style: '短平快、热点驱动、情绪化表达',
+    characteristics: '140字以内的极限表达训练、热点话题快速反应与态度表态、善用反问和感叹号制造情绪张力、话题标签（#）是核心叙事元素、口语化短句如同朋友吐槽、表情包与文字高度融合',
+    example: '#今日热搜# 我真的会谢！！！这波操作属实是给我整不会了[裂开][裂开][裂开] 评论区说说你们的看法👇',
+    exampleSource: '微博典型帖子',
+    avoid: '避免长篇大论、避免冷静客观、避免缺乏互动感'
+  },
+  {
+    id: 'xiaohongshu_platform',
+    name: '小红书体',
+    nameEn: 'RED Style',
+    region: '中国',
+    era: '互联网时代',
+    category: '平台文风',
+    style: '种草分享、真实体验、精致排版',
+    characteristics: '第一人称真实体验感的绝对优先、大量emoji用于视觉分割和情绪表达、封面图+标题的极致吸引力法则、"姐妹们"等亲密称呼建立信任感、实用信息密度高（价格/地址/时间）、结尾必带话题标签矩阵',
+    example: '✨姐妹们！我宣布这是我今年买过最值的！！\n\n谁懂啊家人们😭之前一直用XX，直到被闺蜜安利了这个...\n\n📍地址：XXX\n💰人均：XX元\n⭐推荐：XXX\n\n#好物分享 #种草 #我的年度爱用',
+    exampleSource: '小红书典型笔记',
+    avoid: '避免正式语气、避免无图纯文字、避免抽象描述'
+  },
+  {
+    id: 'bilibili',
+    name: 'B站弹幕体',
+    nameEn: 'Bilibili Style',
+    region: '中国',
+    era: '互联网时代',
+    category: '平台文风',
+    style: '弹幕互动、玩梗造梗、二次元',
+    characteristics: '弹幕式短评——即时反应与集体狂欢、大量ACG（动画漫画游戏）圈层用语和梗、造梗能力极强——万物皆可鬼畜、对UP主（创作者）的粉丝文化表达、弹幕礼仪与社区规则的微妙平衡、破圈传播——从B站走向全网的热梗',
+    example: '前方高能！！！\n哈哈哈哈哈哈笑死\n空降成功 00:42\n梦开始的地方\n恭喜你发现了宝藏\n下次一定！',
+    exampleSource: 'B站弹幕文化',
+    avoid: '避免严肃正式、避免圈外人看不懂的术语、避免长篇大论'
+  },
+  {
+    id: 'gongzhonghao',
+    name: '公众号体',
+    nameEn: 'WeChat Official Account',
+    region: '中国',
+    era: '互联网时代',
+    category: '平台文风',
+    style: '标题党、深度好文、金句结尾',
+    characteristics: '标题即转化率——悬念/数字/反差/共鸣四大策略、开头三秒抓人——用故事或提问引入、正文段落短小精悍适合手机阅读、金句高频出现——每屏至少一个可截图分享的句子、结尾引导关注和转发、排版精美——大量留白与配图',
+    example: '30岁以后，我终于明白了一个道理：人这一生，最重要的不是努力，而是选择。\n\n前几天跟一个老朋友吃饭，他说了一句话让我醍醐灌顶...\n\n所以你看，人生就是这样。\n\n如果觉得有用，就点个「在看」吧。',
+    exampleSource: '微信公众号典型文章',
+    avoid: '避免长段落、避免平淡开头、避免无转发引导'
+  },
+  {
+    id: 'douyin',
+    name: '抖音体',
+    nameEn: 'Douyin Style',
+    region: '中国',
+    era: '互联网时代',
+    category: '平台文风',
+    style: '短句式、强节奏、黄金3秒',
+    characteristics: '前3秒必须抓住注意力的极限开场、短句如鼓点般密集的节奏感、口语化到极致——就像在跟朋友视频通话、流行语和BGM的深度绑定、反转和悬念是核心叙事动力、评论区互动是内容的一部分',
+    example: '家人们！今天这个视频你一定要看完！\n\n因为最后3秒会颠覆你的认知...\n\n3...\n2...\n1...\n\n没想到吧？评论区告诉我你的想法！',
+    exampleSource: '抖音短视频文案',
+    avoid: '避免慢热、避免长句、避免无互动设计的结尾'
+  },
+  {
+    id: 'jike',
+    name: '即刻体',
+    nameEn: 'Jike Style',
+    region: '中国',
+    era: '互联网时代',
+    category: '平台文风',
+    style: '即刻记录、圈层社交、碎片灵感',
+    characteristics: '碎片化的即刻记录——当下的想法与感受、圈层化社交——在特定话题下深度交流、冷幽默与自嘲是核心表达方式、对新事物的快速捕捉与分享、简洁而有信息量的表达、社区氛围的温和与包容',
+    example: '刚刚发现一个有趣的事：\n\n把手机翻转过来看这段文字，你会发现...\n\n算了，你试试就知道了。',
+    exampleSource: '即刻社区典型帖子',
+    avoid: '避免长篇大论、避免攻击性表达、避免脱离社区氛围'
+  },
+
+  // ========== 影视动漫风格 ==========
+  {
+    id: 'miyazakihayao',
+    name: '宫崎骏',
+    nameEn: 'Hayao Miyazaki',
+    region: '日本',
+    era: '当代',
+    category: '影视动漫',
+    style: '飞翔与成长、自然崇拜、蒸汽朋克',
+    characteristics: '飞翔是永恒的主题——物理上的飞行与精神上的自由、对自然万物的深切敬畏与温柔凝视、少女成长叙事中的坚韧与独立、蒸汽朋克与欧洲小镇的视觉美学、战争与和平的反复追问、在幻想中注入现实的重量',
+    example: '起风了，唯有努力生存。',
+    exampleSource: '《起风了》',
+    avoid: '避免简单善恶对立、避免快速推进、避免回避环境议题'
+  },
+  {
+    id: 'shinkai',
+    name: '新海诚',
+    nameEn: 'Makoto Shinkai',
+    region: '日本',
+    era: '当代',
+    category: '影视动漫',
+    style: '唯美距离、天空意象、少男少女',
+    characteristics: '极致唯美的视觉风格——每一帧都是壁纸、天空与云层的反复出现作为情感隐喻、少男少女之间无法跨越的距离感、手机/电车/书信等通讯媒介的叙事功能、独白式的情感表达、"丧失"与"寻找"的永恒主题',
+    example: '樱花飘落的速度是每秒五厘米。我该用什么样的速度，才能与你相遇。',
+    exampleSource: '《秒速五厘米》',
+    avoid: '避免直白表达、避免圆满结局、避免成人视角'
+  },
+  {
+    id: 'kon',
+    name: '今敏',
+    nameEn: 'Satoshi Kon',
+    region: '日本',
+    era: '当代',
+    category: '影视动漫',
+    style: '梦境嵌套、虚实交错、心理惊悚',
+    characteristics: '梦境与现实的无缝切换开创性技法、叙事结构的层层嵌套如俄罗斯套娃、对现代人精神困境的深刻洞察、动画媒介的无限可能性探索、惊悚与温情的奇妙交织、每个镜头都经过精心设计的电影感',
+    example: '你以为你醒着，其实你还在梦里。你以为你在梦里，其实你已经醒了。',
+    exampleSource: '《红辣椒》风格',
+    avoid: '避免线性叙事、避免单一解读、避免回避心理深度'
+  },
+  {
+    id: 'anno',
+    name: '庵野秀明',
+    nameEn: 'Hideaki Anno',
+    region: '日本',
+    era: '当代',
+    category: '影视动漫',
+    style: '心理剖析、宗教符号、解构主义',
+    characteristics: '对角色心理创伤的毫不留情的展示、宗教符号与科幻设定的奇特融合、打破第四面墙的元叙事实验、从类型片外壳到作者内心的转向、极度个人化的表达——作品即心理治疗、对御宅族文化的审视与反思',
+    example: '恭喜你。',
+    exampleSource: '《新世纪福音战士》结局',
+    avoid: '避免回避心理创伤、避免传统英雄叙事、避免迎合观众'
+  },
+  {
+    id: 'urobuchi',
+    name: '虚渊玄',
+    nameEn: 'Gen Urobuchi',
+    region: '日本',
+    era: '当代',
+    category: '影视动漫',
+    style: '黑暗绝望、希望与代价、哲学思辨',
+    characteristics: '在绝望的深渊中寻找微光、对"正义"与"希望"的残酷解构、哲学思辨融入激烈的情节冲突、角色必须在极端情境下做出选择、对理想主义的冷静审视与悲悯、结局往往惨烈但蕴含深意',
+    example: '所谓希望，就是在绝望中开出的花。但花会凋谢，希望也会破灭。即便如此，人还是要继续走下去。',
+    exampleSource: '《魔法少女小圆》风格',
+    avoid: '避免廉价的希望、避免非黑即白、避免回避残酷选择'
+  },
+  {
+    id: 'wongkarwai',
+    name: '王家卫',
+    nameEn: 'Wong Kar-wai',
+    region: '中国',
+    era: '当代',
+    category: '影视动漫',
+    style: '暧昧时间、独白絮语、霓虹美学',
+    characteristics: '关于时间的执念——钟表、日期、过期罐头、喃喃自语式的内心独白贯穿始终、暧昧与错过的情感美学、霓虹灯下孤独身影的视觉风格、碎片化叙事如记忆片段闪回、音乐与画面的高度融合',
+    example: '不知道从什么时候开始，在什么东西上面都有个日期，秋刀鱼会过期，肉罐头会过期，连保鲜纸都会过期，我开始怀疑，在这个世界上，还有什么东西是不会过期的？',
+    exampleSource: '《重庆森林》',
+    avoid: '避免直白告白、避免线性叙事、避免明亮色调'
+  },
+  {
+    id: 'tarantino',
+    name: '昆汀·塔伦蒂诺',
+    nameEn: 'Quentin Tarantino',
+    region: '美国',
+    era: '当代',
+    category: '影视动漫',
+    style: '暴力美学、非线性叙事、对白轰炸',
+    characteristics: '大段看似无关的日常对白中暗藏张力、非线性叙事结构的精密如钟表、暴力场景的华丽与突然的切换、对流行文化与B级片的致敬与拼贴、多线叙事最终汇聚的戏剧性高潮、黑色幽默消解暴力的沉重感',
+    example: 'The path of the righteous man is beset on all sides by the inequities of the selfish and the tyranny of evil men.',
+    exampleSource: '《低俗小说》经典台词',
+    avoid: '避免线性叙事、避免回避暴力、避免沉默寡言的角色'
+  },
+  {
+    id: 'nolan',
+    name: '克里斯托弗·诺兰',
+    nameEn: 'Christopher Nolan',
+    region: '英国',
+    era: '当代',
+    category: '影视动漫',
+    style: '时间游戏、高概念、理性叙事',
+    characteristics: '对时间结构的极致探索与解构、高概念设定（盗梦/穿越/反转）的严谨执行、理性至上的叙事——情感为逻辑服务、交叉剪辑创造多线并行的紧张感、在商业大片中融入哲学思辨、开放式结局引发无尽讨论',
+    example: 'They said one day you\'d learn that sometimes a man has to do what\'s right, even if it\'s not what he wants.',
+    exampleSource: '《星际穿越》',
+    avoid: '避免情感泛滥、避免简单线性、避免回避智力挑战'
+  },
+  {
+    id: 'koreeda',
+    name: '是枝裕和',
+    nameEn: 'Hirokazu Kore-eda',
+    region: '日本',
+    era: '当代',
+    category: '影视动漫',
+    style: '家庭日常、克制深情、生活流',
+    characteristics: '对日常生活的深情凝视而不煽情、家庭关系的微妙张力与治愈力量、非职业演员的自然表演风格、生活流叙事——不刻意制造冲突、食物与吃饭场景的反复出现、社会议题的温和但不妥协的呈现',
+    example: '他们说，活着的东西都是很费功夫的。',
+    exampleSource: '《海街日记》',
+    avoid: '避免戏剧化冲突、避免煽情配乐、避免道德评判'
+  },
+  {
+    id: 'woodyallen',
+    name: '伍迪·艾伦',
+    nameEn: 'Woody Allen',
+    region: '美国',
+    era: '当代',
+    category: '影视动漫',
+    style: '知识分子絮叨、纽约情怀、存在焦虑',
+    characteristics: '絮絮叨叨的知识分子式幽默贯穿始终、对纽约城市的深情告白与讽刺、关于死亡/爱情/艺术的持续焦虑、打破第四面墙与观众直接对话、爵士乐与黑白影像的怀旧美学、将自己的神经质人格写入每一个角色',
+    example: 'I\'m not afraid of death; I just don\'t want to be there when it happens.',
+    exampleSource: '伍迪·艾伦经典语录',
+    avoid: '避免沉默寡言、避免回避焦虑、避免宏大叙事'
+  },
+  {
+    id: 'wesanderson',
+    name: '韦斯·安德森',
+    nameEn: 'Wes Anderson',
+    region: '美国',
+    era: '当代',
+    category: '影视动漫',
+    style: '对称构图、童话色彩、冷幽默',
+    characteristics: '极致对称的视觉构图如童话绘本、马卡龙色调的独特色彩体系、冷面幽默——角色面无表情地做荒诞的事、家庭创伤与和解的反复主题、细节控——每个道具都经过精心设计、章节体叙事如翻开一本精装书',
+    example: 'I wonder if it remembers me.',
+    exampleSource: '《水中生活》',
+    avoid: '避免杂乱构图、避免热烈煽情、避免现实主义'
+  },
+  {
+    id: 'kubrick',
+    name: '斯坦利·库布里克',
+    nameEn: 'Stanley Kubrick',
+    region: '美国',
+    era: '20世纪',
+    category: '影视动漫',
+    style: '冷峻完美、人性暗面、类型颠覆',
+    characteristics: '对每个镜头的极致完美主义追求、冷峻如手术刀般的视觉风格、对人性黑暗面的无情审视与呈现、每种类型片都拍成该类型的巅峰与终结、古典音乐与暴力画面的反差美学、开放式解读留给观众思考空间',
+    example: 'I\'m sorry, Dave. I\'m afraid I can\'t do that.',
+    exampleSource: '《2001太空漫游》',
+    avoid: '避免温情脉脉、避免简单结局、避免回避哲学命题'
+  },
+
+  // ========== 多国文学补充 ==========
+  {
+    id: 'poe',
+    name: '爱伦·坡',
+    nameEn: 'Edgar Allan Poe',
+    region: '美国',
+    era: '19世纪',
+    category: '欧美文学',
+    style: '哥特恐怖、心理惊悚、侦探鼻祖',
+    characteristics: '恐怖与美的奇异融合——"美女之死是世上最富诗意的主题"、第一人称叙述者逐步陷入疯狂的心理描写、侦探小说范式的开创者（推理/密室/密码）、哥特式氛围营造——古堡/地窖/暗夜/乌鸦、节奏的精确控制——效果统一论、诗歌的音乐性与小说的悬疑性并重',
+    example: 'Once upon a midnight dreary, while I pondered, weak and weary...',
+    exampleSource: '《乌鸦》',
+    avoid: '避免阳光明媚、避免理性冷静、避免大团圆结局'
+  },
+  {
+    id: 'chandler',
+    name: '雷蒙德·钱德勒',
+    nameEn: 'Raymond Chandler',
+    region: '美国',
+    era: '20世纪',
+    category: '欧美文学',
+    style: '硬汉侦探、冷硬派、比喻大师',
+    characteristics: '硬汉派侦探小说的巅峰代表、令人拍案叫绝的比喻如爵士乐即兴、第一人称私家侦探马洛的冷眼旁观、洛杉矶作为堕落之城的文学地图、对话简洁如子弹——一句话塑造人物、在罪案中揭示社会腐败的深刻批判',
+    example: 'To say goodbye is to die a little.',
+    exampleSource: '《漫长的告别》',
+    avoid: '避免温情软语、避免复杂结构、避免道德说教'
+  },
+  {
+    id: 'pkdick',
+    name: '菲利普·迪克',
+    nameEn: 'Philip K. Dick',
+    region: '美国',
+    era: '20世纪',
+    category: '欧美文学',
+    style: '何为真实、药物体验、赛博朋克先声',
+    characteristics: '对"什么是真实"的持续追问与解构、药物与精神分裂体验的文学转化、赛博朋克与反乌托邦的先驱性探索、日常场景中突然出现的裂缝与崩塌、多重现实与虚假记忆的叙事迷宫、在科幻外壳下探讨深刻的哲学命题',
+    example: 'Reality is that which, when you stop believing in it, doesn\'t go away.',
+    exampleSource: '菲利普·迪克名言',
+    avoid: '避免确定的现实、避免简单科幻、避免回避哲学追问'
+  },
+  {
+    id: 'pynchon',
+    name: '托马斯·品钦',
+    nameEn: 'Thomas Pynchon',
+    region: '美国',
+    era: '20世纪',
+    category: '欧美文学',
+    style: '后现代史诗、百科全书式、阴谋论',
+    characteristics: '百科全书式的知识密度令人眩晕、庞大而复杂的阴谋论叙事网络、通俗文化与高雅文学的无缝混搭、荒诞幽默与深刻批判的奇特结合、对科技/历史/权力的不信任与解构、拒绝简单答案的开放式叙事',
+    example: 'A screaming comes across the sky.',
+    exampleSource: '《万有引力之虹》',
+    avoid: '避免简单叙事、避免回避复杂性、避免给出确定答案'
+  },
+  {
+    id: 'tolkien',
+    name: 'J.R.R.托尔金',
+    nameEn: 'J.R.R. Tolkien',
+    region: '英国',
+    era: '20世纪',
+    category: '欧美文学',
+    style: '史诗奇幻、语言创造、善恶之战',
+    characteristics: '构建完整神话世界的极致想象力、发明精灵语等多种语言的学者功底、史诗般的善恶之战与微小个体改变世界、对工业文明与田园牧歌的深刻反思、北欧神话与基督教精神的融合、友谊与牺牲是永恒的主题',
+    example: 'All that is gold does not glitter, not all those who wander are lost.',
+    exampleSource: '《魔戒》',
+    avoid: '避免现代口吻、避免轻视细节、避免回避道德选择'
+  },
+  {
+    id: 'asimov',
+    name: '艾萨克·阿西莫夫',
+    nameEn: 'Isaac Asimov',
+    region: '美国',
+    era: '20世纪',
+    category: '欧美文学',
+    style: '硬科幻大师、机器人三定律、基地系列',
+    characteristics: '用清晰简洁的逻辑推演宏大科幻设定、机器人三定律的哲学与伦理探索、心理史学——预测人类文明未来的宏大构想、对话驱动的叙事风格——以智识交锋推进情节、将科学概念的文学化表达做到极致、在理性框架下探讨人性本质',
+    example: 'Violence is the last refuge of the incompetent.',
+    exampleSource: '《基地》',
+    avoid: '避免情感泛滥、避免回避科学逻辑、避免魔幻元素'
+  },
+  {
+    id: 'leguin',
+    name: '厄休拉·勒古恩',
+    nameEn: 'Ursula K. Le Guin',
+    region: '美国',
+    era: '20世纪',
+    category: '欧美文学',
+    style: '人类学科幻、道家思想、性别探索',
+    characteristics: '以人类学家的视角构建异星文明与文化、道家思想（阴阳平衡/无为）的文学化表达、对性别与身份的先锋性探索与解构、在科幻与奇幻的边界自由穿梭、语言如诗般优雅而富有哲思、边缘视角的温柔而坚定的力量',
+    example: 'It is good to have an end to journey toward; but it is the journey that matters, in the end.',
+    exampleSource: '《地海传说》',
+    avoid: '避免二元对立、避免英雄主义、避免回避文化差异'
+  },
+  {
+    id: 'joyce',
+    name: '詹姆斯·乔伊斯',
+    nameEn: 'James Joyce',
+    region: '爱尔兰',
+    era: '20世纪',
+    category: '欧美文学',
+    style: '意识流巅峰、语言实验、都柏林',
+    characteristics: '意识流技巧的极致运用与极限探索、一天之内讲述整个人类经验的史诗野心、对语言的无限创造与解构——造词/双关/多语混合、都柏林作为精神故乡的永恒书写、从《都柏林人》到《尤利西斯》到《芬尼根的守灵夜》的不断自我超越、对读者智力的极限挑战与尊重',
+    example: 'riverrun, past Eve and Adam\'s, from swerve of shore to bend of bay, brings us by a commodius vicus of recirculation back to Howth Castle and Environs.',
+    exampleSource: '《芬尼根的守灵夜》',
+    avoid: '避免简单易懂、避免传统叙事、避免回避语言实验'
+  },
+  {
+    id: 'wilde',
+    name: '奥斯卡·王尔德',
+    nameEn: 'Oscar Wilde',
+    region: '爱尔兰',
+    era: '19世纪',
+    category: '欧美文学',
+    style: '机智悖论、唯美主义、毒舌金句',
+    characteristics: '无与伦比的机智与悖论式金句制造能力、唯美主义——为艺术而艺术的宣言与实践、对维多利亚社会虚伪道德的犀利讽刺、喜剧对话如击剑般优雅而致命（一击必中）、在华丽浮夸的表面下暗藏社会批判、用幽默包裹深刻悲剧的叙事天才',
+    example: 'We are all in the gutter, but some of us are looking at the stars.',
+    exampleSource: '《温德米尔夫人的扇子》',
+    avoid: '避免朴素直白、避免回避悖论、避免道德说教'
+  },
+  {
+    id: 'beckett',
+    name: '塞缪尔·贝克特',
+    nameEn: 'Samuel Beckett',
+    region: '爱尔兰',
+    era: '20世纪',
+    category: '欧美文学',
+    style: '荒诞派、极简主义、等待戈多',
+    characteristics: '极简到极限的语言——剥去一切修饰后的赤裸存在、荒诞派戏剧的巅峰——等待的意义就是等待本身、黑色幽默与绝望的奇妙交织、对语言本身的不信任与解构、在虚无中坚持前行的悲壮力量、将人类困境浓缩为最简洁的舞台呈现',
+    example: 'Ever tried. Ever failed. No matter. Try again. Fail again. Fail better.',
+    exampleSource: '《最糟糕，嗯》',
+    avoid: '避免繁复修饰、避免给出答案、避免回避虚无'
+  },
+  {
+    id: 'proust',
+    name: '马塞尔·普鲁斯特',
+    nameEn: 'Marcel Proust',
+    region: '法国',
+    era: '20世纪',
+    category: '欧美文学',
+    style: '意识流先河、绵长细腻、回忆叙事',
+    characteristics: '用极其绵长的句子追踪意识的每一个细微波动、由一块玛德莱娜蛋糕引发的七卷巨著、对时间/记忆/爱情的深刻哲学思考、上流社会沙龙与人物群像的精妙描摹、比喻如层层展开的花瓣般繁复而精确、将个人记忆升华为人类普遍经验',
+    example: 'Longtemps, je me suis couché de bonne heure.',
+    exampleSource: '《追忆似水年华》',
+    avoid: '避免简洁明快、避免回避细节、避免快速推进'
+  },
+  {
+    id: 'hesse',
+    name: '赫尔曼·黑塞',
+    nameEn: 'Hermann Hesse',
+    region: '德国',
+    era: '20世纪',
+    category: '欧美文学',
+    style: '精神探索、东方智慧、成长小说',
+    characteristics: '对个体精神成长与自我认知的持续书写、东西方哲学思想的融合与对话、成长小说（Bildungsroman）的现代典范、对现代文明与物质主义的深刻批判、诗意而富有哲思的语言风格、在二元对立中寻找统一与和谐',
+    example: '世界上任何一本书都不能带给你好运，但它们能让你悄悄成为你自己。',
+    exampleSource: '黑塞名言',
+    avoid: '避免回避精神追问、避免物质主义视角、避免简单答案'
+  },
+  {
+    id: 'thomasmann',
+    name: '托马斯·曼',
+    nameEn: 'Thomas Mann',
+    region: '德国',
+    era: '20世纪',
+    category: '欧美文学',
+    style: '史诗性反讽、艺术家困境、德国精神',
+    characteristics: '对艺术家与资产阶级社会关系的深刻审视、反讽贯穿始终——既同情又批判的叙事姿态、宏大叙事中精准的心理细节描写、对德国精神与文化的持续探索与反思、古典音乐结构融入小说叙事、疾病/死亡/创造力之间的复杂关系',
+    example: 'A man lives not only his personal life, as an individual, but also, consciously or unconsciously, the life of his epoch and his contemporaries.',
+    exampleSource: '《魔山》',
+    avoid: '避免回避反讽、避免简单叙事、避免脱离历史语境'
+  },
+  {
+    id: 'bulgakov',
+    name: '米哈伊尔·布尔加科夫',
+    nameEn: 'Mikhail Bulgakov',
+    region: '俄罗斯',
+    era: '20世纪',
+    category: '欧美文学',
+    style: '魔幻讽刺、莫斯科寓言、大师与玛格丽特',
+    characteristics: '撒旦降临莫斯科的魔幻现实主义开山之作、对苏联社会与官僚体制的尖锐讽刺、在极权环境下坚持创作的勇气与智慧、多线叙事——古代耶路撒冷与现代莫斯科的交织、荒诞与幽默中蕴含深刻的人性洞察、手稿不灭——对文学不朽力量的信仰',
+    example: 'Manuscripts don\'t burn.',
+    exampleSource: '《大师与玛格丽特》',
+    avoid: '避免回避政治讽刺、避免线性叙事、避免温和表达'
+  },
+  {
+    id: 'pushkin',
+    name: '普希金',
+    nameEn: 'Alexander Pushkin',
+    region: '俄罗斯',
+    era: '19世纪',
+    category: '欧美文学',
+    style: '俄罗斯诗歌的太阳、简洁明快、叙事诗',
+    characteristics: '俄罗斯现代文学语言的奠基者与开创者、简洁明快的语言风格如阳光般清澈、叙事诗（诗体小说）的完美掌控、对自由与爱情的永恒歌颂、民间传说与文学传统的创造性融合、在浪漫主义中注入现实主义精神',
+    example: 'Я вас любил: любовь еще, быть может...',
+    exampleSource: '《我曾经爱过你》',
+    avoid: '避免晦涩沉重、避免过度修饰、避免冷峻疏离'
+  },
+  {
+    id: 'llosa',
+    name: '马里奥·巴尔加斯·略萨',
+    nameEn: 'Mario Vargas Llosa',
+    region: '秘鲁',
+    era: '当代',
+    category: '拉美文学',
+    style: '结构现实主义、多线叙事、政治书写',
+    characteristics: '结构现实主义——多线叙事如同精密建筑、对秘鲁社会与政治的持续关注与书写、对话与叙述无缝切换的独特技法、时间与空间的自由跳跃如蒙太奇、对权力与暴力的深刻剖析、在文学技巧与政治关怀之间找到平衡',
+    example: 'He was still too young to know that the heart\'s memory eliminates the bad and magnifies the good.',
+    exampleSource: '《城市与狗》',
+    avoid: '避免回避政治、避免简单叙事、避免单一视角'
+  },
+  {
+    id: 'cortazar',
+    name: '胡利奥·科塔萨尔',
+    nameEn: 'Julio Cortázar',
+    region: '阿根廷',
+    era: '20世纪',
+    category: '拉美文学',
+    style: '游戏叙事、日常裂痕、爵士即兴',
+    characteristics: '把小说变成一场与读者共同参与的游戏、在日常生活的表面发现裂缝与另一个世界、爵士乐般的即兴叙事节奏与结构、对现实主义与幻想的边界进行幽默解构、短篇小说形式的革命者与创新者、语言如爵士乐手般自由而精准',
+    example: 'Andábamos sin buscarnos pero sabiendo que andábamos para encontrarnos.',
+    exampleSource: '《跳房子》',
+    avoid: '避免线性叙事、避免回避游戏、避免沉闷严肃'
+  },
+  {
+    id: 'tagore',
+    name: '泰戈尔',
+    nameEn: 'Rabindranath Tagore',
+    region: '印度',
+    era: '近代',
+    category: '亚洲文学',
+    style: '灵性诗意、东方哲思、自然与爱',
+    characteristics: '灵性与诗意的完美融合——如晨露般清澈、对自然万物的深情咏叹与人格化、东西方文化桥梁的建造者、爱与神性是贯穿始终的核心主题、简洁而富有哲理的语言风格、音乐与绘画等多重艺术形式的通感表达',
+    example: '如果你因失去了太阳而流泪，那么你也将失去群星了。',
+    exampleSource: '《飞鸟集》',
+    avoid: '避免复杂晦涩、避免物质主义、避免回避灵性'
+  },
+  {
+    id: 'hangang',
+    name: '韩江',
+    nameEn: 'Han Kang',
+    region: '韩国',
+    era: '当代',
+    category: '亚洲文学',
+    style: '植物性叙事、身体书写、暴力与美',
+    characteristics: '以植物隐喻探索人类存在的边界与可能、对身体与暴力的冷静而深刻的书写、女性视角下对压抑与反抗的独特表达、简洁而富有诗意的语言张力、在日常与异常之间的微妙平衡、将韩国历史创伤转化为个人叙事',
+    example: 'The feeling that she had never really been alive in this world caught her by surprise. It was a fact. She had never lived.',
+    exampleSource: '《素食者》',
+    avoid: '避免回避身体、避免传统叙事、避免温和表达'
+  },
+  {
+    id: 'kimyoung',
+    name: '金英夏',
+    nameEn: 'Kim Young-ha',
+    region: '韩国',
+    era: '当代',
+    category: '亚洲文学',
+    style: '都市存在主义、黑色幽默、类型融合',
+    characteristics: '韩国都市生活中的存在主义困境书写、黑色幽默与悬疑叙事的巧妙融合、对当代韩国社会问题的犀利观察、简洁利落的叙事节奏如电影剪辑、对死亡与暴力主题的冷静而深刻的处理、通俗性与文学性之间的平衡',
+    example: 'I\'m a murderer. I\'m twenty-six years old. I\'m a college graduate. I\'m a son. I\'m a murderer.',
+    exampleSource: '《我有破坏自己的权利》',
+    avoid: '避免回避都市孤独、避免传统道德、避免温和叙事'
+  },
+  {
+    id: 'achebe',
+    name: '钦努阿·阿契贝',
+    nameEn: 'Chinua Achebe',
+    region: '尼日利亚',
+    era: '20世纪',
+    category: '非洲文学',
+    style: '非洲视角、口述传统、殖民批判',
+    characteristics: '从非洲内部视角讲述非洲故事的开创者、将伊博族口述传统融入现代小说叙事、对殖民主义及其文化后果的深刻批判、简洁而有力的英语中融入非洲语言节奏、在传统与现代的冲突中寻找平衡、用文学夺回被殖民叙事剥夺的话语权',
+    example: 'The white man is very clever. He came quietly and peaceably with his religion. We were amused at his foolishness and allowed him to stay. Now he has won our brothers, and our clan can no longer act like one.',
+    exampleSource: '《瓦解》',
+    avoid: '避免西方中心视角、避免回避殖民议题、避免简化冲突'
+  },
+  {
+    id: 'cervantes',
+    name: '塞万提斯',
+    nameEn: 'Miguel de Cervantes',
+    region: '西班牙',
+    era: '17世纪',
+    category: '欧美文学',
+    style: '元小说先河、理想与现实的碰撞、流浪汉小说',
+    characteristics: '现代小说的开创者——堂吉诃德是文学史上第一个真正的小说人物、理想主义与现实世界的荒诞碰撞、元小说技法的先驱——虚构与真实的边界模糊、幽默与悲悯交织的叙事语调、流浪汉小说传统的集大成与超越、对人性弱点的深刻理解与温柔包容',
+    example: 'El que lee mucho y anda mucho, ve mucho y sabe mucho.',
+    exampleSource: '《堂吉诃德》',
+    avoid: '避免回避理想主义、避免简单讽刺、避免扁平人物'
+  },
+  {
+    id: 'ferrante',
+    name: '埃莱娜·费兰特',
+    nameEn: 'Elena Ferrante',
+    region: '意大利',
+    era: '当代',
+    category: '欧美文学',
+    style: '女性友谊、那不勒斯、匿名写作',
+    characteristics: '对女性友谊的极致书写——爱恨交织的复杂情感、那不勒斯四部曲的史诗级女性成长叙事、匿名写作者身份带来的神秘感与纯粹性、对阶级与教育议题的深刻洞察、坦率而激烈的情感表达方式、在个人叙事中折射意大利社会变迁',
+    example: 'We were twelve years old, but we walked along the streets of the hot city, the two of us, as if we were on the beach, on the sand, near the sea.',
+    exampleSource: '《我的天才女友》',
+    avoid: '避免回避女性经验、避免温和表达、避免男性中心叙事'
+  },
+  {
+    id: 'szymborska',
+    name: '维斯拉瓦·辛波斯卡',
+    nameEn: 'Wisława Szymborska',
+    region: '波兰',
+    era: '20世纪',
+    category: '欧美文学',
+    style: '日常哲思、反讽轻盈、以小见大',
+    characteristics: '从日常生活的微小事物中提炼哲学洞见、轻盈而精准的反讽语调如手术刀、以"我不知道"作为思考的起点而非终点、对偶然性与存在的好奇与惊叹、诗歌形式简洁而内涵丰富如俳句、幽默中蕴含对人类的深切关怀',
+    example: 'I prefer the hell of chaos to the hell of order.',
+    exampleSource: '《种种可能》',
+    avoid: '避免宏大宣言、避免沉重晦涩、避免回避日常'
   }
 ];
 
@@ -865,7 +1443,41 @@ function escapeHtml(text) {
 }
 
 // ========== 作家卡片渲染 ==========
-function renderAuthors(filterText, filterRegion) {
+function getCategory(author) {
+  if (author.category) return author.category;
+  const region = author.region;
+  if (region === '中国') return '中国文学';
+  if (region === '日本') return '日本文学';
+  if (['美国', '英国', '法国', '德国', '俄罗斯', '爱尔兰', '意大利', '波兰', '西班牙'].includes(region)) return '欧美文学';
+  if (['秘鲁', '阿根廷', '哥伦比亚'].includes(region)) return '拉美文学';
+  if (['印度', '韩国'].includes(region)) return '亚洲文学';
+  if (['尼日利亚'].includes(region)) return '非洲文学';
+  if (region === '国际') return '欧美文学';
+  return '欧美文学';
+}
+
+function getRegionClass(author) {
+  if (author.category) {
+    if (author.category === '平台文风') return 'region-platform';
+    if (author.category === '影视动漫') return 'region-anime';
+  }
+  const region = author.region;
+  if (region === '中国') return 'region-cn';
+  if (region === '日本') return 'region-jp';
+  if (['美国', '英国', '爱尔兰'].includes(region)) return 'region-intl';
+  if (['法国', '德国', '意大利', '西班牙', '波兰', '俄罗斯'].includes(region)) return 'region-eu';
+  if (['秘鲁', '阿根廷', '哥伦比亚'].includes(region)) return 'region-latam';
+  if (['印度', '韩国'].includes(region)) return 'region-asia';
+  if (['尼日利亚'].includes(region)) return 'region-africa';
+  return 'region-intl';
+}
+
+function getRegionLabel(author) {
+  if (author.category) return author.category;
+  return author.region;
+}
+
+function renderAuthors(filterText, filterCategory) {
   let filtered = authors;
 
   if (filterText) {
@@ -875,12 +1487,13 @@ function renderAuthors(filterText, filterRegion) {
       a.nameEn.toLowerCase().includes(lower) ||
       a.style.includes(filterText) ||
       a.characteristics.includes(filterText) ||
-      a.era.includes(filterText)
+      a.era.includes(filterText) ||
+      (a.region && a.region.includes(filterText))
     );
   }
 
-  if (filterRegion && filterRegion !== 'all') {
-    filtered = filtered.filter(a => a.region === filterRegion);
+  if (filterCategory && filterCategory !== 'all') {
+    filtered = filtered.filter(a => getCategory(a) === filterCategory);
   }
 
   elements.authorCount.textContent = filtered.length;
@@ -894,7 +1507,7 @@ function renderAuthors(filterText, filterRegion) {
     <div class="author-card" data-author-id="${a.id}">
       <div class="author-card-header">
         <span class="author-name">${escapeHtml(a.name)}</span>
-        <span class="author-region ${a.region === '中国' ? 'region-cn' : a.region === '日本' ? 'region-jp' : 'region-intl'}">${escapeHtml(a.region)}</span>
+        <span class="author-region ${getRegionClass(a)}">${escapeHtml(getRegionLabel(a))}</span>
       </div>
       <div class="author-meta">${escapeHtml(a.nameEn)} · ${escapeHtml(a.era)}</div>
       <div class="author-style">${escapeHtml(a.style)}</div>
