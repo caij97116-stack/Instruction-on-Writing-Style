@@ -282,6 +282,34 @@ body {
 .ai-output-content::-webkit-scrollbar { width: 5px; }
 .ai-output-content::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
 
+/* ========== AI 指令输入栏 ========== */
+.ai-cmd-bar {
+  display: flex; align-items: center; gap: 8px; padding: 10px 0 4px;
+  border-top: 1px dashed var(--border); margin-top: 10px;
+}
+.cmd-label {
+  font-size: 0.8rem; font-weight: 600; color: var(--primary); white-space: nowrap;
+}
+.ai-cmd-bar input[type="text"] {
+  flex: 1; padding: 7px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  font-size: 0.82rem; font-family: inherit; color: var(--text); outline: none;
+  transition: border-color var(--transition);
+}
+.ai-cmd-bar input:focus { border-color: var(--border-focus); box-shadow: 0 0 0 2px rgba(99,102,241,0.1); }
+.ai-cmd-bar input::placeholder { color: var(--text-muted); font-size: 0.78rem; }
+
+.btn-pack {
+  padding: 7px 14px; background: var(--primary-light); color: var(--primary);
+  border: 1px solid var(--primary); border-radius: 6px; font-weight: 600;
+}
+.btn-pack:hover { background: var(--primary); color: #fff; }
+
+.btn-tavern {
+  padding: 7px 14px; background: #fef3c7; color: #92400e;
+  border: 1px solid #f59e0b; border-radius: 6px; font-weight: 600;
+}
+.btn-tavern:hover { background: #f59e0b; color: #fff; }
+
 /* ========== Toast ========== */
 .toast {
   position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(100px);

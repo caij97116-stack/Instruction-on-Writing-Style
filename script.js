@@ -1730,6 +1730,7 @@ function buildInstructionText(author) {
 const aiGenerateBtn = document.getElementById('aiGenerateBtn');
 const aiOutput = document.getElementById('aiOutput');
 const aiOutputContent = document.getElementById('aiOutputContent');
+let currentAiInstruction = null; // 底层存储：AI 生成的那段指令文本
 
 function buildAiPrompt(author) {
   const chars = author.characteristics.split('；').filter(c => c.trim());
@@ -1835,9 +1836,18 @@ async function generateAiInstruction() {
     const data = await res.json();
     const content = data.choices?.[0]?.message?.content || '（AI 未返回内容）';
 
+    // 存入底层
+    currentAiInstruction = {
+      authorName: currentAuthor.name,
+      authorId: currentAuthor.id,
+      content: content,
+      timestamp: new Date().toISOString()
+    };
+
     aiOutputContent.className = 'ai-output-content';
     aiOutputContent.innerHTML = formatMarkdown(content);
     aiOutput.scrollIntoView({ behavior: 'smooth' });
+    showToast('AI 指令已存入底层，可用「打包」导出');
   } catch (e) {
     aiOutputContent.className = 'ai-output-content';
     aiOutputContent.innerHTML = '<span style="color:var(--danger);">AI 调用失败：' + e.message + '</span>';
@@ -1893,6 +1903,112 @@ document.getElementById('downloadAiBtn').addEventListener('click', () => {
   URL.revokeObjectURL(url);
   showToast('下载成功');
 });
+
+// ========== 指令栏：关键词检测 + 打包 + 酒馆格式 ==========
+const cmdInput = document.getElementById('cmdInput');
+const cmdPackBtn = document.getElementById('cmdPackBtn');
+const cmdTavernBtn = document.getElementById('cmdTavernBtn');
+
+// 纯文本打包
+function packAsTxt() {
+  if (!currentAiInstruction) {
+    showToast('底层没有 AI 指令，请先生成');
+    return;
+  }
+  const text = currentAiInstruction.content;
+  const name = currentAiInstruction.authorName || '未命名';
+  downloadFile('文风指令_' + name + '.txt', text, 'text/plain;charset=utf-8');
+  showToast('已打包为 TXT');
+}
+
+// 酒馆格式转换
+function convertToTavern() {
+  if (!currentAiInstruction) {
+    showToast('底层没有 AI 指令，请先生成');
+    return;
+  }
+  const content = currentAiInstruction.content;
+  const name = currentAiInstruction.authorName || '未命名';
+
+  // 提取 AI 输出中的各个部分
+  const sections = {};
+  const lines = content.split('\n');
+  let currentSection = 'header';
+  let sectionContent = [];
+
+  for (const line of lines) {
+    if (line.match(/^##?\s*[一二三四五六七八九十]、/) || line.match(/^##?\s*[一二三四五六七八九十]\./)) {
+      if (currentSection && sectionContent.length > 0) {
+        sections[currentSection] = sectionContent.join('\n').trim();
+      }
+      currentSection = line.replace(/^#+\s*/, '').replace(/[。，,.]/g, '').trim();
+      sectionContent = [];
+    } else {
+      sectionContent.push(line);
+    }
+  }
+  if (currentSection && sectionContent.length > 0) {
+    sections[currentSection] = sectionContent.join('\n').trim();
+  }
+
+  // 构建酒馆格式 JSON（SillyTavern 兼容）
+  const tavernData = {
+    "spec": "writing_style_v1",
+    "name": "写作风格: " + name,
+    "description": "AI 生成的写作风格指令",
+    "style_name": name,
+    "author": "AI Generated",
+    "created_at": currentAiInstruction.timestamp,
+    "system_prompt": "你正在使用「" + name + "」风格写作。请严格按照以下写作风格指令进行创作。",
+    "post_history_instructions": "【写作风格指令】\n" + content,
+    "sections": sections,
+    "raw_content": content,
+    "tags": ["writing-style", "ai-generated", "instruction"],
+    "version": "1.0"
+  };
+
+  const json = JSON.stringify(tavernData, null, 2);
+  downloadFile('文风指令_' + name + '_酒馆格式.json', json, 'application/json;charset=utf-8');
+  showToast('已打包为酒馆格式 JSON');
+}
+
+function downloadFile(filename, content, mimeType) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// 清空底层
+function clearAiInstruction() {
+  currentAiInstruction = null;
+  aiOutputContent.innerHTML = '';
+  aiOutputContent.className = 'ai-output-content';
+  showToast('底层已清空');
+}
+
+// 关键词检测
+cmdInput.addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter') return;
+  const cmd = cmdInput.value.trim();
+  if (!cmd) return;
+
+  if (cmd.includes('清空') && cmd.includes('底层')) {
+    clearAiInstruction();
+  } else if (cmd.includes('酒馆') || cmd.includes('tavern') || cmd.includes('silly')) {
+    convertToTavern();
+  } else if (cmd.includes('打包') || cmd.includes('下载') || cmd.includes('导出')) {
+    packAsTxt();
+  } else {
+    showToast('未识别指令，试试：打包 / 打包成酒馆格式文风指令 / 清空底层');
+  }
+  cmdInput.value = '';
+});
+
+cmdPackBtn.addEventListener('click', packAsTxt);
+cmdTavernBtn.addEventListener('click', convertToTavern);
 
 // ========== 预设模板 ==========
 const presetsData = {
