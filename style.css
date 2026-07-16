@@ -551,6 +551,11 @@ body {
   color: #1e40af;
 }
 
+.region-jp {
+  background: #fce7f3;
+  color: #9d174d;
+}
+
 .author-meta {
   font-size: 0.75rem;
   color: var(--text-muted);
