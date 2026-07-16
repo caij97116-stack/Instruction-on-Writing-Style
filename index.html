@@ -120,6 +120,31 @@
       </section>
     </div>
 
+    <!-- 作家文风库 -->
+    <section class="authors-section">
+      <div class="authors-header">
+        <h2>作家文风库</h2>
+        <div class="authors-toolbar">
+          <div class="search-wrapper">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input type="text" id="authorSearch" placeholder="搜索作家名、风格特点、年代...">
+          </div>
+          <div class="select-wrapper">
+            <select id="authorRegion">
+              <option value="all">全部地区</option>
+              <option value="中国">中国作家</option>
+              <option value="国际">国际作家</option>
+            </select>
+          </div>
+          <span class="author-count">共 <strong id="authorCount">0</strong> 位</span>
+        </div>
+      </div>
+      <div class="authors-grid" id="authorGrid"></div>
+    </section>
+
     <!-- 预设模板 -->
     <section class="presets-section">
       <h2>快速模板</h2>
