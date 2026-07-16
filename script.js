@@ -1726,6 +1726,174 @@ function buildInstructionText(author) {
   return text;
 }
 
+// ========== AI 生成指令 ==========
+const aiGenerateBtn = document.getElementById('aiGenerateBtn');
+const aiOutput = document.getElementById('aiOutput');
+const aiOutputContent = document.getElementById('aiOutputContent');
+
+function buildAiPrompt(author) {
+  const chars = author.characteristics.split('；').filter(c => c.trim());
+  let charsText = chars.map((c, i) => (i + 1) + '. ' + c.trim()).join('\n');
+
+  return `你是一个写作教练。现在你要根据下面的资料，为一位写作者生成一份详细的写作风格指令。
+
+请你阅读下面的全部资料，然后按照"输出格式"的要求，生成一份完整的写作风格指令。
+
+【作家/风格名称】
+${author.name}
+
+【风格概述】
+${author.style}
+
+【写作特征（逐条）】
+${charsText}
+
+【经典片段】
+"${author.example}"
+—— 出处：${author.exampleSource}
+
+【写作禁忌】
+${author.avoid}
+
+【输出格式】
+请严格按照下面的结构输出，每个部分都要写，不要跳过任何部分：
+
+# ${author.name}风格写作指令
+
+## 一、这是什么风格？
+用2-3句大白话解释这种风格，让一个完全不懂的人也能立刻明白。比如"这种风格就像XXX，说话的方式是XXX，给人的感觉是XXX"。
+
+## 二、具体怎么写？（逐条）
+至少列出8条具体的写作方法。每条要包含：
+- 写什么：这条说的是句子还是段落还是用词还是结构
+- 怎么写：具体怎么做，用"多做什么""少做什么"的方式说
+- 举个例：给一个简单的例子（用中文写）
+格式：第X条：关于【XX方面】。具体做法是XXX。比如你可以写："XXX"。
+
+## 三、句子和段落怎么安排？
+- 句子一般多长？（几个字到几个字）
+- 段落一般多长？（几行）
+- 节奏是快还是慢？
+- 有没有什么特殊的句式要常用？
+
+## 四、常用哪些修辞手法？
+列出3-5种最常用的修辞手法，每种都要给出一个简单的例子。不要用专业术语，用大白话解释。
+
+## 五、整体的语气和感觉
+- 读起来是什么感觉？（像什么？）
+- 是冷还是热？是快还是慢？是轻还是重？
+- 适合写什么内容？
+
+## 六、最重要的3条写作原则
+每条一句话，直接告诉写作者"记住XXX就行"。
+
+## 七、千万别做的事
+列出3-5个最常见的错误，用"不要XXX"的句式，每条后面解释为什么。
+
+【重要注意事项】
+- 全部用通俗易懂的中文写，不要用学术术语
+- 每条都要具体、可操作，让写作者照着做就能写出这种风格
+- 例子要简单明了，一看就懂
+- 不要空洞地说"语言优美""富有诗意"这种废话，要说出"怎么写出优美的语言"
+- 格式要清晰，用换行和数字编号，方便阅读`;
+}
+
+async function generateAiInstruction() {
+  if (!currentAuthor) { showToast('请先从左侧选择一位作家'); return; }
+
+  const url = apiUrl.value.trim();
+  const key = apiKey.value.trim();
+  const model = getModel();
+  if (!url || !key) { showToast('请先在 API 面板配置地址和 Key'); apiToggleBtn.click(); return; }
+
+  // 显示 AI 输出区
+  aiOutput.style.display = 'block';
+  aiOutputContent.className = 'ai-output-content loading-text';
+  aiOutputContent.textContent = '正在调用 AI 分析「' + currentAuthor.name + '」的文风，请稍候...';
+  aiGenerateBtn.classList.add('loading');
+  aiGenerateBtn.disabled = true;
+
+  const prompt = buildAiPrompt(currentAuthor);
+
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+      body: JSON.stringify({
+        model: model || 'gpt-3.5-turbo',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.7,
+        max_tokens: 4096
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error('HTTP ' + res.status + ': ' + err.substring(0, 200));
+    }
+
+    const data = await res.json();
+    const content = data.choices?.[0]?.message?.content || '（AI 未返回内容）';
+
+    aiOutputContent.className = 'ai-output-content';
+    aiOutputContent.innerHTML = formatMarkdown(content);
+    aiOutput.scrollIntoView({ behavior: 'smooth' });
+  } catch (e) {
+    aiOutputContent.className = 'ai-output-content';
+    aiOutputContent.innerHTML = '<span style="color:var(--danger);">AI 调用失败：' + e.message + '</span>';
+    showToast('AI 调用失败');
+  } finally {
+    aiGenerateBtn.classList.remove('loading');
+    aiGenerateBtn.disabled = false;
+  }
+}
+
+function formatMarkdown(text) {
+  let html = text
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    // 标题
+    .replace(/^# (.+)$/gm, '<h4 style="font-size:1.1rem;font-weight:700;color:var(--primary);margin:16px 0 8px;">$1</h4>')
+    .replace(/^## (.+)$/gm, '<h4 style="font-size:0.95rem;font-weight:600;color:var(--primary);margin:14px 0 6px;padding-bottom:4px;border-bottom:1px solid var(--primary-light);">$1</h4>')
+    .replace(/^### (.+)$/gm, '<h5 style="font-size:0.88rem;font-weight:600;color:var(--text);margin:10px 0 4px;">$1</h5>')
+    // 列表
+    .replace(/^- (.+)$/gm, '<li style="margin-bottom:2px;">$1</li>')
+    .replace(/^(\d+)\. (.+)$/gm, '<li style="margin-bottom:2px;">$2</li>')
+    // 粗体
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    // 代码
+    .replace(/`([^`]+)`/g, '<code style="background:#f3f4f6;padding:1px 5px;border-radius:4px;font-size:0.85em;">$1</code>')
+    // 换行
+    .replace(/\n\n/g, '</p><p style="margin-bottom:6px;">')
+    .replace(/\n/g, '<br>');
+
+  // 包裹连续 li
+  html = html.replace(/(<li[^>]*>.*?<\/li>)+/g, '<ul style="padding-left:18px;margin:4px 0;">$&</ul>');
+
+  return '<p style="margin-bottom:6px;">' + html + '</p>';
+}
+
+aiGenerateBtn.addEventListener('click', generateAiInstruction);
+
+// AI 输出复制
+document.getElementById('copyAiBtn').addEventListener('click', () => {
+  const text = aiOutputContent.innerText;
+  if (!text.trim()) { showToast('没有可复制的内容'); return; }
+  navigator.clipboard.writeText(text).then(() => showToast('已复制')).catch(() => showToast('复制失败'));
+});
+
+// AI 输出下载
+document.getElementById('downloadAiBtn').addEventListener('click', () => {
+  const text = aiOutputContent.innerText;
+  if (!text.trim()) { showToast('没有可下载的内容'); return; }
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'AI文风指令_' + (currentAuthor ? currentAuthor.name : '未命名') + '.txt';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('下载成功');
+});
+
 // ========== 预设模板 ==========
 const presetsData = {
   xiaohongshu: { name: '小红书种草风', style: '活泼亲切、emoji丰富、突出体验感', characteristics: '大量使用emoji表情、口语化表达、第一人称视角、感叹号收尾、突出个人体验感；善用短句，每段不超过三行；封面图+标题的极致吸引力法则；"姐妹们"等亲密称呼建立信任感；实用信息密度高（价格/地址/时间）；结尾必带话题标签矩阵', avoid: '避免正式书面语、避免长段落、避免说教感' },

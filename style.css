@@ -241,6 +241,47 @@ body {
 }
 .btn-icon:hover { background: var(--surface-hover); color: var(--text); border-color: var(--text-muted); }
 
+.btn-ai {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border: 1px solid var(--primary); border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: #fff; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+  transition: all var(--transition); font-family: inherit; white-space: nowrap;
+}
+.btn-ai:hover { opacity: 0.9; transform: translateY(-1px); }
+.btn-ai:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.btn-ai.loading { pointer-events: none; }
+.btn-ai.loading svg { animation: spin 1s linear infinite; }
+
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+/* ========== AI 输出区 ========== */
+.ai-output {
+  border-top: 1px solid var(--border); padding: 16px 24px 8px;
+  max-height: 300px; overflow-y: auto;
+}
+.ai-output-header {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
+}
+.ai-output-header h3 {
+  font-size: 0.95rem; font-weight: 600; color: var(--primary);
+}
+.ai-output-content {
+  font-size: 0.85rem; line-height: 1.8; color: var(--text); white-space: pre-wrap;
+}
+.ai-output-content.loading-text {
+  color: var(--text-muted); font-style: italic; text-align: center; padding: 20px;
+}
+.ai-output-content .ai-section { margin-bottom: 14px; }
+.ai-output-content .ai-section h4 {
+  font-size: 0.88rem; font-weight: 600; color: var(--primary); margin-bottom: 4px;
+}
+.ai-output-content .ai-section p { margin-bottom: 4px; }
+.ai-output-content .ai-section ul { padding-left: 18px; }
+.ai-output-content .ai-section li { margin-bottom: 3px; }
+.ai-output-content::-webkit-scrollbar { width: 5px; }
+.ai-output-content::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+
 /* ========== Toast ========== */
 .toast {
   position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(100px);
