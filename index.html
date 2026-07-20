@@ -202,14 +202,40 @@
           </div>
         </div>
 
-        <!-- 标签2：AI 工作区 -->
+        <!-- 标签2：AI 工作区（聊天界面） -->
         <div class="tab-content" id="tabWorkspace">
           <div class="workspace-header">
             <h2>AI 工作区</h2>
-            <span id="workspaceStatus" class="workspace-status">就绪 — 请先在作者详情中点击「AI 生成指令」</span>
+            <span id="workspaceStatus" class="workspace-status">直接告诉我你想要哪个作家的风格，我会自动调取资料生成指令</span>
           </div>
 
-          <!-- AI 思考过程（可展开） -->
+          <!-- 聊天消息区 -->
+          <div id="chatMessages" class="chat-messages">
+            <div class="chat-message assistant">
+              <div class="chat-avatar">🤖</div>
+              <div class="chat-bubble">
+                <p>你好！我是<strong>文风指令助手</strong>。</p>
+                <p>我内置了 <strong>109 位作家/平台/影视风格</strong>的详细资料。你可以直接告诉我：</p>
+                <ul>
+                  <li>"帮我生成<strong>鲁迅</strong>风格的文风指令"</li>
+                  <li>"我想要<strong>村上春树</strong>那种感觉"</li>
+                  <li>"给我一个<strong>小红书种草风</strong>"</li>
+                  <li>"把刚才的指令改得<strong>更温柔一点</strong>"</li>
+                </ul>
+                <p>随时可以输入 <strong>「打包」</strong>导出为 TXT，或 <strong>「打包成酒馆格式」</strong>导出为酒馆格式。</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 思考动画（嵌入聊天） -->
+          <div id="thinkingAnimation" class="thinking-animation" style="display:none;">
+            <div class="thinking-dots">
+              <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            </div>
+            <span class="thinking-text" id="thinkingText">AI 正在分析资料</span>
+          </div>
+
+          <!-- AI 思考过程（可展开，嵌入聊天） -->
           <div id="thinkingSection" class="thinking-section" style="display:none;">
             <div class="thinking-toggle" id="thinkingToggle">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -221,77 +247,29 @@
             <div class="thinking-content" id="thinkingContent"></div>
           </div>
 
-          <!-- 思考动画 -->
-          <div id="thinkingAnimation" class="thinking-animation" style="display:none;">
-            <div class="thinking-dots">
-              <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+          <!-- 聊天输入区 -->
+          <div class="chat-input-area">
+            <div class="chat-input-row">
+              <textarea id="chatInput" rows="2" placeholder="输入你想生成的风格，比如：帮我生成鲁迅风格的文风指令，要更犀利一点..." autocomplete="off"></textarea>
+              <button id="chatSendBtn" class="btn-ai" title="发送">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9 22,2"/>
+                </svg>
+              </button>
             </div>
-            <span class="thinking-text">AI 正在思考</span>
-          </div>
-
-          <!-- AI 输出内容 -->
-          <div id="aiOutput" class="ai-output" style="display:none;">
-            <div class="ai-output-header">
-              <h3>生成的指令</h3>
-              <div class="output-actions">
-                <button id="toggleThinkingBtn" class="btn-icon" title="展开/收起 AI 思考过程" style="display:none;">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/>
-                  </svg>
-                </button>
-                <button id="copyAiBtn" class="btn-icon" title="复制">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                  </svg>
-                </button>
-                <button id="downloadAiBtn" class="btn-icon" title="下载">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                    <polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/>
-                  </svg>
-                </button>
-              </div>
+            <div class="chat-quick-actions">
+              <button id="chatContinueBtn" class="btn-sm btn-continue-sm" title="续写当前指令" style="display:none;">续写</button>
+              <button id="chatPackBtn" class="btn-sm btn-outline" title="打包为 TXT" style="display:none;">打包为 TXT</button>
+              <button id="chatTavernBtn" class="btn-sm btn-outline" title="打包为酒馆格式" style="display:none;">酒馆格式</button>
+              <button id="chatCopyBtn" class="btn-sm btn-outline" title="复制当前指令" style="display:none;">复制</button>
+              <button id="chatClearBtn" class="btn-sm btn-outline" title="清空当前指令" style="display:none;">清空底层</button>
             </div>
-            <div id="aiOutputContent" class="ai-output-content"></div>
-          </div>
-
-          <!-- 续写 & 指令栏 -->
-          <div class="workspace-actions-bar">
-            <button id="aiContinueBtn" class="btn-continue" title="按照 AI 原思路继续续写" style="display:none;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="5,12 12,19 19,12"/><line x1="12" y1="19" x2="12" y2="5"/>
-              </svg>
-              续写
-            </button>
-            <div class="ai-cmd-bar">
-              <label class="cmd-label">指令</label>
-              <input type="text" id="cmdInput" placeholder="输入：打包 / 打包成酒馆格式文风指令 / 清空底层" autocomplete="off">
-              <button id="cmdPackBtn" class="btn-sm btn-pack" title="打包为 TXT">打包</button>
-              <button id="cmdTavernBtn" class="btn-sm btn-tavern" title="打包为酒馆格式">酒馆格式</button>
-            </div>
-          </div>
-
-          <!-- 快速模板 -->
-          <div class="workspace-presets">
-            <h3>快速模板</h3>
-            <div class="presets-grid" id="presetsGrid">
-              <div class="preset-card" data-preset="xiaohongshu">
-                <h3>小红书种草风</h3>
-                <p>活泼亲切、emoji丰富、突出体验感</p>
-              </div>
-              <div class="preset-card" data-preset="academic">
-                <h3>学术论文风</h3>
-                <p>严谨客观、逻辑清晰、引用规范</p>
-              </div>
-              <div class="preset-card" data-preset="storytelling">
-                <h3>故事叙述风</h3>
-                <p>画面感强、情感真挚、节奏起伏</p>
-              </div>
-              <div class="preset-card" data-preset="marketing">
-                <h3>营销文案风</h3>
-                <p>抓住痛点、突出卖点、号召行动</p>
-              </div>
+            <div class="chat-presets">
+              <span class="chat-presets-label">快速模板：</span>
+              <button class="chat-preset-btn" data-preset="xiaohongshu">小红书</button>
+              <button class="chat-preset-btn" data-preset="academic">学术</button>
+              <button class="chat-preset-btn" data-preset="storytelling">叙事</button>
+              <button class="chat-preset-btn" data-preset="marketing">营销</button>
             </div>
           </div>
 
@@ -315,7 +293,7 @@
             <div id="historyPanel" class="history-panel collapsed">
               <div id="historyList" class="history-list">
                 <div class="empty-state" style="padding:16px;">
-                  <p style="font-size:0.78rem;">暂无生成记录，点击「AI 生成指令」后自动保存</p>
+                  <p style="font-size:0.78rem;">暂无生成记录</p>
                 </div>
               </div>
             </div>
@@ -341,7 +319,7 @@
             <div id="errorPanel" class="error-panel collapsed">
               <div id="errorList" class="error-list">
                 <div class="empty-state" style="padding:16px;">
-                  <p style="font-size:0.78rem;">暂无错误记录，一切正常</p>
+                  <p style="font-size:0.78rem;">暂无错误记录</p>
                 </div>
               </div>
             </div>

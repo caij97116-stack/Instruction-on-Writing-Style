@@ -1912,20 +1912,24 @@ function buildInstructionText(author) {
   return text;
 }
 
-// ========== AI 生成指令 ==========
-const aiGenerateBtn = document.getElementById('aiGenerateBtn');
-const aiContinueBtn = document.getElementById('aiContinueBtn');
-const aiOutput = document.getElementById('aiOutput');
-const aiOutputContent = document.getElementById('aiOutputContent');
+// ========== 聊天式 AI 工作区 ==========
+const chatMessages = document.getElementById('chatMessages');
+const chatInput = document.getElementById('chatInput');
+const chatSendBtn = document.getElementById('chatSendBtn');
+const chatContinueBtn = document.getElementById('chatContinueBtn');
+const chatPackBtn = document.getElementById('chatPackBtn');
+const chatTavernBtn = document.getElementById('chatTavernBtn');
+const chatCopyBtn = document.getElementById('chatCopyBtn');
+const chatClearBtn = document.getElementById('chatClearBtn');
 const thinkingAnimation = document.getElementById('thinkingAnimation');
 const thinkingSection = document.getElementById('thinkingSection');
 const thinkingContent = document.getElementById('thinkingContent');
 const thinkingToggle = document.getElementById('thinkingToggle');
 const thinkingTokenCount = document.getElementById('thinkingTokenCount');
-const toggleThinkingBtn = document.getElementById('toggleThinkingBtn');
-let currentAiInstruction = null; // 底层存储：AI 生成的那段指令文本
-let currentReasoning = null; // 底层存储：AI 思考过程
-let isContinueMode = false; // 是否续写模式
+const thinkingText = document.getElementById('thinkingText');
+let currentAiInstruction = null;
+let currentReasoning = null;
+let chatContext = [];
 
 // 思考过程展开/收起
 thinkingToggle.addEventListener('click', () => {
@@ -1933,406 +1937,271 @@ thinkingToggle.addEventListener('click', () => {
   thinkingToggle.classList.toggle('expanded', expanded);
 });
 
-toggleThinkingBtn.addEventListener('click', () => {
-  if (thinkingSection.style.display === 'none') {
-    thinkingSection.style.display = 'block';
-    thinkingContent.classList.add('expanded');
-    thinkingToggle.classList.add('expanded');
-    toggleThinkingBtn.classList.add('active');
-  } else {
-    thinkingSection.style.display = 'none';
-    thinkingContent.classList.remove('expanded');
-    thinkingToggle.classList.remove('expanded');
-    toggleThinkingBtn.classList.remove('active');
-  }
-});
-
 // 显示思考动画
 function showThinking() {
   thinkingAnimation.style.display = 'flex';
-  aiOutputContent.innerHTML = '';
-  aiContinueBtn.style.display = 'none';
 }
-
 // 隐藏思考动画
 function hideThinking() {
   thinkingAnimation.style.display = 'none';
 }
+// 隐藏思考内容
+function hideThinkingContent() {
+  thinkingSection.style.display = 'none';
+  thinkingContent.classList.remove('expanded');
+  thinkingToggle.classList.remove('expanded');
+}
 
 // 显示推理内容
 function showReasoning(reasoning) {
-  if (!reasoning || reasoning.trim().length === 0) {
-    thinkingSection.style.display = 'none';
-    toggleThinkingBtn.style.display = 'none';
-    return;
-  }
+  if (!reasoning || reasoning.trim().length === 0) { thinkingSection.style.display = 'none'; return; }
   currentReasoning = reasoning;
   thinkingSection.style.display = 'block';
   thinkingContent.innerHTML = reasoning.replace(/\n/g, '<br>');
   thinkingContent.classList.add('expanded');
   thinkingToggle.classList.add('expanded');
   thinkingTokenCount.textContent = '约 ' + reasoning.length + ' 字';
-  toggleThinkingBtn.style.display = 'inline-flex';
-  toggleThinkingBtn.classList.add('active');
 }
 
-function buildAiPrompt(author, extraKnowledge = '') {
-  const chars = author.characteristics.split('；').filter(c => c.trim());
-  let charsText = chars.map((c, i) => (i + 1) + '. ' + c.trim()).join('\n');
+// 构建系统提示词（包含库内所有作者资料）
+function buildSystemPrompt() {
+  const authorList = authors.map(a => {
+    return '【' + a.name + '】| 分类:' + a.region + '| 年代:' + a.era + '| 风格:' + a.style + '| 特征:' + a.characteristics + '| 禁忌:' + a.avoid;
+  }).join('\n');
 
-  let prompt = `你是一个写作教练。现在你要根据下面的资料，为一位写作者生成一份详细的写作风格指令。
+  return '你是文风指令生成助手，内置了 ' + authors.length + ' 位作家/平台/影视风格的完整资料。\n\n## 你的能力\n1. 根据用户描述的风格需求，从底层资料中匹配最合适的作家\n2. 生成详细的写作风格指令（至少8条可操作方法）\n3. 根据用户反馈修改、完善指令\n4. 支持续写、调整语气、增加细节等操作\n\n## 底层资料库（所有作家完整数据）\n' + authorList + '\n\n## 生成指令的格式要求\n当用户要求生成指令时，请按以下格式输出：\n\n# 【作家名】风格写作指令\n\n## 一、这是什么风格？\n用2-3句大白话解释\n\n## 二、具体怎么写？（逐条，至少8条）\n每条包含：写什么方面 + 具体怎么做 + 简单例子\n格式：第X条：关于【XX方面】。具体做法是XXX。比如你可以写："XXX"。\n\n## 三、句子和段落安排\n\n## 四、常用修辞手法\n3-5种，每种给例子\n\n## 五、整体语气和感觉\n\n## 六、最重要的3条写作原则\n\n## 七、千万别做的事\n\n## 重要规则\n- 全部用通俗易懂的中文，不要学术术语\n- 每条都要具体可操作，例子简单明了\n- 不要说"语言优美""富有诗意"这种废话，要说"怎么写出优美的语言"';
+}
 
-请你阅读下面的全部资料，然后按照"输出格式"的要求，生成一份完整的写作风格指令。
-
-【作家/风格名称】
-${author.name}
-
-【风格概述】
-${author.style}
-
-【写作特征（逐条）】
-${charsText}
-
-【经典片段】
-"${author.example}"
-—— 出处：${author.exampleSource}
-
-【写作禁忌】
-${author.avoid}`;
-
-  // 如果有联网搜索的补充资料，追加到 prompt
-  if (extraKnowledge) {
-    prompt += `
-
-【联网搜索补充资料（来自互联网，请参考这些信息丰富你的理解）】
-${extraKnowledge}`;
+// 检测用户消息中提到的作者名
+function detectAuthorMention(text) {
+  const lower = text.toLowerCase();
+  for (const author of authors) {
+    if (lower.includes(author.name.toLowerCase())) return author;
   }
-
-  prompt += `
-
-【输出格式】
-请严格按照下面的结构输出，每个部分都要写，不要跳过任何部分：
-
-# ${author.name}风格写作指令
-
-## 一、这是什么风格？
-用2-3句大白话解释这种风格，让一个完全不懂的人也能立刻明白。比如"这种风格就像XXX，说话的方式是XXX，给人的感觉是XXX"。
-
-## 二、具体怎么写？（逐条）
-至少列出8条具体的写作方法。每条要包含：
-- 写什么：这条说的是句子还是段落还是用词还是结构
-- 怎么写：具体怎么做，用"多做什么""少做什么"的方式说
-- 举个例：给一个简单的例子（用中文写）
-格式：第X条：关于【XX方面】。具体做法是XXX。比如你可以写："XXX"。
-
-## 三、句子和段落怎么安排？
-- 句子一般多长？（几个字到几个字）
-- 段落一般多长？（几行）
-- 节奏是快还是慢？
-- 有没有什么特殊的句式要常用？
-
-## 四、常用哪些修辞手法？
-列出3-5种最常用的修辞手法，每种都要给出一个简单的例子。不要用专业术语，用大白话解释。
-
-## 五、整体的语气和感觉
-- 读起来是什么感觉？（像什么？）
-- 是冷还是热？是快还是慢？是轻还是重？
-- 适合写什么内容？
-
-## 六、最重要的3条写作原则
-每条一句话，直接告诉写作者"记住XXX就行"。
-
-## 七、千万别做的事
-列出3-5个最常见的错误，用"不要XXX"的句式，每条后面解释为什么。
-
-【重要注意事项】
-- 全部用通俗易懂的中文写，不要用学术术语
-- 每条都要具体、可操作，让写作者照着做就能写出这种风格
-- 例子要简单明了，一看就懂
-- 不要空洞地说"语言优美""富有诗意"这种废话，要说出"怎么写出优美的语言"
-- 格式要清晰，用换行和数字编号，方便阅读`;
-
-  return prompt;
+  return null;
 }
 
-async function generateAiInstruction(isContinue = false) {
-  if (!currentAuthor) { showToast('请先从左侧选择一位作家'); return; }
+// 添加聊天气泡
+function addChatBubble(role, html) {
+  const div = document.createElement('div');
+  div.className = 'chat-message ' + role;
+  div.innerHTML = '<div class="chat-avatar">' + (role === 'user' ? '👤' : '🤖') + '</div><div class="chat-bubble">' + html + '</div>';
+  chatMessages.appendChild(div);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+  return div;
+}
 
+// 显示/隐藏快捷操作按钮
+function showQuickActions() {
+  chatContinueBtn.style.display = 'inline-flex';
+  chatPackBtn.style.display = 'inline-flex';
+  chatTavernBtn.style.display = 'inline-flex';
+  chatCopyBtn.style.display = 'inline-flex';
+  chatClearBtn.style.display = 'inline-flex';
+}
+function hideQuickActions() {
+  chatContinueBtn.style.display = 'none';
+  chatPackBtn.style.display = 'none';
+  chatTavernBtn.style.display = 'none';
+  chatCopyBtn.style.display = 'none';
+  chatClearBtn.style.display = 'none';
+}
+
+// 发送聊天消息
+async function sendChatMessage(userText) {
   const url = apiUrl.value.trim();
   const key = apiKey.value.trim();
   const model = getModel();
   if (!url || !key) { showToast('请先在 API 面板配置地址和 Key'); apiToggleBtn.click(); return; }
+  if (!userText) return;
 
-  isContinueMode = isContinue;
+  // 特殊命令
+  const lower = userText.toLowerCase().trim();
+  if (lower === '打包' || lower === '打包。') { packAsTxt(); return; }
+  if (lower.includes('酒馆格式') || lower.includes('tavern')) { convertToTavern(); return; }
+  if (lower === '续写' || lower === '续写。') { continueChatWriting(); return; }
+  if (lower === '清空' || lower === '清空底层' || lower === '清空底层。') { clearAiInstruction(); return; }
 
-  // 自动切换到 AI 工作区
-  switchToTab('workspace');
-  signalWorkspaceActivity();
+  addChatBubble('user', userText.replace(/\n/g, '<br>'));
 
-  // 显示 AI 输出区
-  aiOutput.style.display = 'block';
-  showThinking();
-  hideThinkingContent();
-  aiGenerateBtn.classList.add('loading');
-  aiGenerateBtn.disabled = true;
-  aiContinueBtn.style.display = 'none';
-  aiContinueBtn.classList.remove('loading');
-  aiContinueBtn.disabled = false;
-
-  let prompt;
-  if (isContinue && currentAiInstruction) {
-    // 续写模式：用之前的输出作为上下文
-    prompt = '你是一个写作教练。之前你为「' + currentAuthor.name + '」风格生成了一份写作指令，下面是已经写好的内容：\n\n' + currentAiInstruction.content + '\n\n请你继续完善这份指令，沿着上面的思路往下写。可以补充更多写作技巧、更多例子、更详细的说明。用同样通俗易懂的语言，保持格式一致。不要重复已经写过的内容，而是补充新的、更深入的内容。';
-
-    // 续写时也做知识增强
-    if (knowledgeEnhanceToggle.checked) {
-      const extra = await enhanceKnowledge(currentAuthor.name);
-      if (extra) {
-        prompt += '\n\n【联网搜索补充资料】\n' + extra;
-      }
-    }
-  } else {
-    // 新生成模式
-    let extraKnowledge = '';
-    if (knowledgeEnhanceToggle.checked) {
-      aiOutputContent.innerHTML = '<span style="color:var(--text-muted);">正在联网搜索「' + currentAuthor.name + '」的补充资料...</span>';
-      extraKnowledge = await enhanceKnowledge(currentAuthor.name);
-    }
-    prompt = buildAiPrompt(currentAuthor, extraKnowledge);
+  // 检测作者名，注入完整资料
+  const detectedAuthor = detectAuthorMention(userText);
+  let enhancedText = userText;
+  if (detectedAuthor) {
+    const chars = detectedAuthor.characteristics.split('；').filter(c => c.trim());
+    const charsText = chars.map((c, i) => (i + 1) + '. ' + c.trim()).join('\n');
+    enhancedText = '【用户从底层资料库中调取了「' + detectedAuthor.name + '」的完整数据，请根据以下资料生成指令】\n\n用户请求：' + userText + '\n\n【' + detectedAuthor.name + ' 的底层资料】\n风格概述：' + detectedAuthor.style + '\n写作特征：\n' + charsText + '\n经典片段："' + detectedAuthor.example + '" —— ' + detectedAuthor.exampleSource + '\n写作禁忌：' + detectedAuthor.avoid;
   }
+
+  if (knowledgeEnhanceToggle.checked && detectedAuthor) {
+    const extra = await enhanceKnowledge(detectedAuthor.name);
+    if (extra) enhancedText += '\n\n【联网搜索补充】\n' + extra;
+  }
+
+  showThinking();
+  thinkingText.textContent = detectedAuthor ? 'AI 正在分析「' + detectedAuthor.name + '」的资料' : 'AI 正在思考';
+  hideThinkingContent();
+
+  const messages = [{ role: 'system', content: buildSystemPrompt() }];
+  messages.push(...chatContext.slice(-20));
+  messages.push({ role: 'user', content: enhancedText });
+  chatContext.push({ role: 'user', content: enhancedText });
 
   try {
     const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
-      body: JSON.stringify({
-        model: model || 'gpt-3.5-turbo',
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.7,
-        max_tokens: 4096
-      })
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+      body: JSON.stringify({ model: model || 'gpt-3.5-turbo', messages: messages, temperature: 0.7, max_tokens: 4096 })
     });
-
-    if (!res.ok) {
-      const err = await res.text();
-      throw new Error('HTTP ' + res.status + ': ' + err.substring(0, 200));
-    }
-
+    if (!res.ok) { const err = await res.text(); throw new Error('HTTP ' + res.status + ': ' + err.substring(0, 200)); }
     const data = await res.json();
     const message = data.choices?.[0]?.message || {};
     const content = message.content || '（AI 未返回内容）';
     const reasoning = message.reasoning_content || '';
 
-    // 显示推理内容
-    showReasoning(reasoning);
+    chatContext.push({ role: 'assistant', content: content });
+    if (chatContext.length > 40) chatContext = chatContext.slice(-40);
 
-    if (isContinue && currentAiInstruction) {
-      // 续写模式：追加内容
-      currentAiInstruction.content = currentAiInstruction.content + '\n\n---\n## 续写内容\n\n' + content;
-      currentAiInstruction.timestamp = new Date().toISOString();
-    } else {
-      // 存入底层
-      currentAiInstruction = {
-        authorName: currentAuthor.name,
-        authorId: currentAuthor.id,
-        content: content,
-        reasoning: reasoning,
-        timestamp: new Date().toISOString()
-      };
-    }
+    if (reasoning) { showReasoning(reasoning); thinkingSection.style.display = 'block'; }
 
-    // 保存到历史记录
+    currentAiInstruction = {
+      authorName: detectedAuthor ? detectedAuthor.name : '自定义',
+      authorId: detectedAuthor ? detectedAuthor.id : '',
+      content: content, reasoning: reasoning,
+      timestamp: new Date().toISOString()
+    };
     saveToHistory(currentAiInstruction);
-
     hideThinking();
-    aiOutputContent.className = 'ai-output-content';
-    aiOutputContent.innerHTML = formatMarkdown(currentAiInstruction.content);
-    aiOutput.scrollIntoView({ behavior: 'smooth' });
-    aiContinueBtn.style.display = 'inline-flex';
-    showToast(isContinue ? '续写完成，已存入底层' : 'AI 指令已存入底层，可用「续写」继续完善');
+    addChatBubble('assistant', formatMarkdown(content));
+    showQuickActions();
+    workspaceStatus.textContent = '当前指令：' + currentAiInstruction.authorName + '（' + content.length + '字）';
     clearWorkspaceSignal();
   } catch (e) {
     hideThinking();
-    aiOutputContent.className = 'ai-output-content';
-    aiOutputContent.innerHTML = '<span style="color:var(--danger);">AI 调用失败：' + e.message + '</span>';
-    showErrorModal('AI 生成指令', e.message, '请求地址: ' + url + '\n模型: ' + (model || '默认') + '\n作家: ' + (currentAuthor?.name || '未知') + '\n' + (e.stack || ''));
+    addChatBubble('assistant', '<span style="color:#dc2626;">调用失败：' + e.message + '</span>');
+    showErrorModal('AI 生成指令', e.message, '请求地址: ' + url + '\n模型: ' + (model || '默认') + '\n' + (e.stack || ''));
     clearWorkspaceSignal();
-  } finally {
-    aiGenerateBtn.classList.remove('loading');
-    aiGenerateBtn.disabled = false;
-    aiContinueBtn.classList.remove('loading');
-    aiContinueBtn.disabled = false;
   }
 }
 
-function hideThinkingContent() {
-  thinkingSection.style.display = 'none';
-  thinkingContent.classList.remove('expanded');
-  thinkingToggle.classList.remove('expanded');
-  toggleThinkingBtn.style.display = 'none';
-  toggleThinkingBtn.classList.remove('active');
-}
-
-// 续写功能
-async function continueWriting() {
+// 续写
+async function continueChatWriting() {
   if (!currentAiInstruction) { showToast('请先生成一段指令后再续写'); return; }
-  aiContinueBtn.classList.add('loading');
-  aiContinueBtn.disabled = true;
-  await generateAiInstruction(true);
+  addChatBubble('user', '续写');
+  showThinking(); thinkingText.textContent = 'AI 正在续写'; hideThinkingContent();
+  const url = apiUrl.value.trim(); const key = apiKey.value.trim(); const model = getModel();
+  const messages = [{ role: 'system', content: buildSystemPrompt() }, ...chatContext.slice(-10), { role: 'user', content: '当前指令如下：\n\n' + currentAiInstruction.content + '\n\n请继续完善上面的写作风格指令，沿着原思路补充更多写作技巧、更详细的例子和更深入的分析。不要重复已有内容。' }];
+  try {
+    const res = await fetch(url, {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+      body: JSON.stringify({ model: model || 'gpt-3.5-turbo', messages: messages, temperature: 0.7, max_tokens: 4096 })
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const content = data.choices?.[0]?.message?.content || '';
+    currentAiInstruction.content = currentAiInstruction.content + '\n\n---\n## 续写内容\n\n' + content;
+    currentAiInstruction.timestamp = new Date().toISOString();
+    saveToHistory(currentAiInstruction);
+    hideThinking();
+    addChatBubble('assistant', formatMarkdown(content));
+    workspaceStatus.textContent = '当前指令：' + currentAiInstruction.authorName + '（' + currentAiInstruction.content.length + '字）';
+    clearWorkspaceSignal();
+  } catch (e) {
+    hideThinking();
+    addChatBubble('assistant', '<span style="color:#dc2626;">续写失败：' + e.message + '</span>');
+    showErrorModal('AI 生成指令', e.message, '');
+    clearWorkspaceSignal();
+  }
 }
 
-aiGenerateBtn.addEventListener('click', () => generateAiInstruction(false));
-aiContinueBtn.addEventListener('click', continueWriting);
-
+// 打包/酒馆/清空/复制
 function formatMarkdown(text) {
   let html = text
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    // 标题
-    .replace(/^# (.+)$/gm, '<h4 style="font-size:1.1rem;font-weight:700;color:var(--primary);margin:16px 0 8px;">$1</h4>')
-    .replace(/^## (.+)$/gm, '<h4 style="font-size:0.95rem;font-weight:600;color:var(--primary);margin:14px 0 6px;padding-bottom:4px;border-bottom:1px solid var(--primary-light);">$1</h4>')
-    .replace(/^### (.+)$/gm, '<h5 style="font-size:0.88rem;font-weight:600;color:var(--text);margin:10px 0 4px;">$1</h5>')
-    // 列表
-    .replace(/^- (.+)$/gm, '<li style="margin-bottom:2px;">$1</li>')
-    .replace(/^(\d+)\. (.+)$/gm, '<li style="margin-bottom:2px;">$2</li>')
-    // 粗体
+    .replace(/^### (.+)$/gm, '<h4>$1</h4>')
+    .replace(/^## (.+)$/gm, '<h3 class="ai-section">$1</h3>')
+    .replace(/^# (.+)$/gm, '<h2 class="ai-section">$1</h2>')
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    // 代码
-    .replace(/`([^`]+)`/g, '<code style="background:#f3f4f6;padding:1px 5px;border-radius:4px;font-size:0.85em;">$1</code>')
-    // 换行
-    .replace(/\n\n/g, '</p><p style="margin-bottom:6px;">')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/^\- (.+)$/gm, '<li>$1</li>')
+    .replace(/^(\d+)\. (.+)$/gm, '<li>$1. $2</li>')
+    .replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>')
+    .replace(/\n\n/g, '</p><p>')
     .replace(/\n/g, '<br>');
-
-  // 包裹连续 li
-  html = html.replace(/(<li[^>]*>.*?<\/li>)+/g, '<ul style="padding-left:18px;margin:4px 0;">$&</ul>');
-
-  return '<p style="margin-bottom:6px;">' + html + '</p>';
+  html = '<p>' + html + '</p>';
+  html = html.replace(/<p><\/p>/g, '');
+  return html;
 }
-
-// AI 输出复制
-document.getElementById('copyAiBtn').addEventListener('click', () => {
-  const text = aiOutputContent.innerText;
-  if (!text.trim()) { showToast('没有可复制的内容'); return; }
-  navigator.clipboard.writeText(text).then(() => showToast('已复制')).catch(() => showToast('复制失败'));
-});
-
-// AI 输出下载
-document.getElementById('downloadAiBtn').addEventListener('click', () => {
-  const text = aiOutputContent.innerText;
-  if (!text.trim()) { showToast('没有可下载的内容'); return; }
-  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = 'AI文风指令_' + (currentAuthor ? currentAuthor.name : '未命名') + '.txt';
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  showToast('下载成功');
-});
-
-// ========== 指令栏：关键词检测 + 打包 + 酒馆格式 ==========
-const cmdInput = document.getElementById('cmdInput');
-const cmdPackBtn = document.getElementById('cmdPackBtn');
-const cmdTavernBtn = document.getElementById('cmdTavernBtn');
-
-// 纯文本打包
-function packAsTxt() {
-  if (!currentAiInstruction) {
-    showToast('底层没有 AI 指令，请先生成');
-    return;
-  }
-  const text = currentAiInstruction.content;
-  const name = currentAiInstruction.authorName || '未命名';
-  downloadFile('文风指令_' + name + '.txt', text, 'text/plain;charset=utf-8');
-  showToast('已打包为 TXT');
-}
-
-// 酒馆格式转换
-function convertToTavern() {
-  if (!currentAiInstruction) {
-    showToast('底层没有 AI 指令，请先生成');
-    return;
-  }
-  const content = currentAiInstruction.content;
-  const name = currentAiInstruction.authorName || '未命名';
-
-  // 提取 AI 输出中的各个部分
-  const sections = {};
-  const lines = content.split('\n');
-  let currentSection = 'header';
-  let sectionContent = [];
-
-  for (const line of lines) {
-    if (line.match(/^##?\s*[一二三四五六七八九十]、/) || line.match(/^##?\s*[一二三四五六七八九十]\./)) {
-      if (currentSection && sectionContent.length > 0) {
-        sections[currentSection] = sectionContent.join('\n').trim();
-      }
-      currentSection = line.replace(/^#+\s*/, '').replace(/[。，,.]/g, '').trim();
-      sectionContent = [];
-    } else {
-      sectionContent.push(line);
-    }
-  }
-  if (currentSection && sectionContent.length > 0) {
-    sections[currentSection] = sectionContent.join('\n').trim();
-  }
-
-  // 构建酒馆格式 JSON（SillyTavern 兼容）
-  const tavernData = {
-    "spec": "writing_style_v1",
-    "name": "写作风格: " + name,
-    "description": "AI 生成的写作风格指令",
-    "style_name": name,
-    "author": "AI Generated",
-    "created_at": currentAiInstruction.timestamp,
-    "system_prompt": "你正在使用「" + name + "」风格写作。请严格按照以下写作风格指令进行创作。",
-    "post_history_instructions": "【写作风格指令】\n" + content,
-    "sections": sections,
-    "raw_content": content,
-    "tags": ["writing-style", "ai-generated", "instruction"],
-    "version": "1.0"
-  };
-
-  const json = JSON.stringify(tavernData, null, 2);
-  downloadFile('文风指令_' + name + '_酒馆格式.json', json, 'application/json;charset=utf-8');
-  showToast('已打包为酒馆格式 JSON');
-}
-
 function downloadFile(filename, content, mimeType) {
   const blob = new Blob([content], { type: mimeType });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url; a.download = filename;
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
 }
-
-// 清空底层
+function packAsTxt() {
+  if (!currentAiInstruction) { showToast('没有可打包的指令'); return; }
+  downloadFile('文风指令_' + currentAiInstruction.authorName + '.txt', currentAiInstruction.content, 'text/plain;charset=utf-8');
+  showToast('已打包下载');
+}
+function convertToTavern() {
+  if (!currentAiInstruction) { showToast('没有可转换的指令'); return; }
+  const tavern = { name: currentAiInstruction.authorName + ' 风格写作指令', description: '通过 AI 自动分析生成的' + currentAiInstruction.authorName + '风格写作指令', content: currentAiInstruction.content, format: 'tavern', generatedAt: currentAiInstruction.timestamp };
+  downloadFile('酒馆格式_' + currentAiInstruction.authorName + '.json', JSON.stringify(tavern, null, 2), 'application/json');
+  showToast('已打包为酒馆格式');
+}
 function clearAiInstruction() {
-  currentAiInstruction = null;
-  aiOutputContent.innerHTML = '';
-  aiOutputContent.className = 'ai-output-content';
+  currentAiInstruction = null; currentReasoning = null; chatContext = [];
+  hideQuickActions();
+  workspaceStatus.textContent = '直接告诉我你想要哪个作家的风格，我会自动调取资料生成指令';
   showToast('底层已清空');
 }
 
-// 关键词检测
-cmdInput.addEventListener('keydown', (e) => {
-  if (e.key !== 'Enter') return;
-  const cmd = cmdInput.value.trim();
-  if (!cmd) return;
-
-  if (cmd.includes('清空') && cmd.includes('底层')) {
-    clearAiInstruction();
-  } else if (cmd.includes('酒馆') || cmd.includes('tavern') || cmd.includes('silly')) {
-    convertToTavern();
-  } else if (cmd.includes('打包') || cmd.includes('下载') || cmd.includes('导出')) {
-    packAsTxt();
-  } else {
-    showToast('未识别指令，试试：打包 / 打包成酒馆格式文风指令 / 清空底层');
+// 事件绑定
+chatSendBtn.addEventListener('click', () => {
+  const text = chatInput.value.trim();
+  if (!text) return;
+  chatInput.value = '';
+  sendChatMessage(text);
+  switchToTab('workspace');
+});
+chatInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    const text = chatInput.value.trim();
+    if (!text) return;
+    chatInput.value = '';
+    sendChatMessage(text);
+    switchToTab('workspace');
   }
-  cmdInput.value = '';
+});
+chatContinueBtn.addEventListener('click', continueChatWriting);
+chatPackBtn.addEventListener('click', packAsTxt);
+chatTavernBtn.addEventListener('click', convertToTavern);
+chatCopyBtn.addEventListener('click', () => {
+  if (!currentAiInstruction) { showToast('没有可复制的内容'); return; }
+  navigator.clipboard.writeText(currentAiInstruction.content).then(() => showToast('已复制')).catch(() => showToast('复制失败'));
+});
+chatClearBtn.addEventListener('click', clearAiInstruction);
+
+// 快速模板按钮
+document.querySelectorAll('.chat-preset-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const key = btn.dataset.preset;
+    const labels = { xiaohongshu: '小红书种草风', academic: '学术论文风', storytelling: '故事叙述风', marketing: '营销文案风' };
+    chatInput.value = '帮我生成一个' + (labels[key] || key) + '的文风指令';
+    chatInput.focus();
+  });
 });
 
-cmdPackBtn.addEventListener('click', packAsTxt);
-cmdTavernBtn.addEventListener('click', convertToTavern);
+// 作者详情中的「AI 生成指令」按钮
+document.getElementById('aiGenerateBtn').addEventListener('click', () => {
+  if (!currentAuthor) { showToast('请先从左侧选择一位作家'); return; }
+  chatInput.value = '帮我生成' + currentAuthor.name + '风格的文风指令';
+  switchToTab('workspace');
+  sendChatMessage(chatInput.value);
+  chatInput.value = '';
+});
 
 // ========== 预设模板 ==========
 const presetsData = {
@@ -2342,13 +2211,13 @@ const presetsData = {
   marketing: { name: '营销文案风', style: '抓住痛点、突出卖点、号召行动', characteristics: '抓住用户痛点、突出产品卖点、制造紧迫感、强有力的行动号召（CTA）、短句为主；数字与具体结果的展示；社会证明（用户评价、销量数据）；对比法突出产品优势；标题即转化率——悬念/数字/反差/共鸣', avoid: '避免冗长介绍、避免技术术语堆砌、避免模糊表达' }
 };
 
+// presetsGrid 事件（作者详情中的快速模板卡片）
 document.getElementById('presetsGrid').addEventListener('click', (e) => {
   const card = e.target.closest('.preset-card');
   if (!card) return;
   const key = card.dataset.preset;
   const p = presetsData[key];
   if (!p) return;
-  // 创建一个临时作者对象来显示
   const tempAuthor = {
     id: 'preset_' + key, name: p.name, nameEn: 'Preset', region: '中国', era: '互联网时代',
     style: p.style, characteristics: p.characteristics, example: '（请参考写作特征进行创作）',
