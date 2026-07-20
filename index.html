@@ -158,66 +158,57 @@
         <div id="authorList" class="author-list"></div>
       </section>
 
-      <!-- 右侧：详情 / 指令输出 -->
+      <!-- 右侧：双标签面板 -->
       <section class="panel detail-panel">
-        <div class="detail-header-row">
-          <h2>作家详情</h2>
-          <div class="output-actions">
-            <button id="aiGenerateBtn" class="btn-ai" title="用 AI 分析当前文风并生成指令">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polygon points="13,2 3,14 12,14 11,22 21,10 12,10 13,2"/>
-              </svg>
-              AI 生成指令
-            </button>
-            <button id="aiContinueBtn" class="btn-continue" title="按照 AI 原思路继续续写" style="display:none;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="5,12 12,19 19,12"/><line x1="12" y1="19" x2="12" y2="5"/>
-              </svg>
-              续写
-            </button>
-            <button id="copyDetailBtn" class="btn-icon" title="复制指令">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-              </svg>
-            </button>
-            <button id="downloadDetailBtn" class="btn-icon" title="下载">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/>
-              </svg>
-            </button>
-          </div>
+        <!-- 标签导航 -->
+        <div class="tab-nav">
+          <button class="tab-btn active" data-tab="detail">作者详情</button>
+          <button class="tab-btn" data-tab="workspace">
+            AI 工作区
+            <span id="workspaceBadge" class="tab-badge" style="display:none;">●</span>
+          </button>
         </div>
-        <div id="authorDetail" class="detail-content">
-          <div class="empty-state">
-            <div class="empty-icon">📖</div>
-            <p>请从左侧列表选择一位作家</p>
-          </div>
-        </div>
-        <div id="aiOutput" class="ai-output" style="display:none;">
-          <div class="ai-output-header">
-            <h3>AI 分析结果</h3>
+
+        <!-- 标签1：作者详情 -->
+        <div class="tab-content active" id="tabDetail">
+          <div class="detail-header-row">
+            <h2>作家详情</h2>
             <div class="output-actions">
-              <button id="toggleThinkingBtn" class="btn-icon" title="展开/收起 AI 思考过程" style="display:none;">
+              <button id="aiGenerateBtn" class="btn-ai" title="用 AI 分析当前文风并生成指令">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/>
+                  <polygon points="13,2 3,14 12,14 11,22 21,10 12,10 13,2"/>
                 </svg>
+                AI 生成指令
               </button>
-              <button id="copyAiBtn" class="btn-icon" title="复制">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <button id="copyDetailBtn" class="btn-icon" title="复制指令">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
                   <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
                 </svg>
               </button>
-              <button id="downloadAiBtn" class="btn-icon" title="下载">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <button id="downloadDetailBtn" class="btn-icon" title="下载">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                   <polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/>
                 </svg>
               </button>
             </div>
           </div>
+          <div id="authorDetail" class="detail-content">
+            <div class="empty-state">
+              <div class="empty-icon">📖</div>
+              <p>请从左侧列表选择一位作家</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 标签2：AI 工作区 -->
+        <div class="tab-content" id="tabWorkspace">
+          <div class="workspace-header">
+            <h2>AI 工作区</h2>
+            <span id="workspaceStatus" class="workspace-status">就绪 — 请先在作者详情中点击「AI 生成指令」</span>
+          </div>
+
           <!-- AI 思考过程（可展开） -->
           <div id="thinkingSection" class="thinking-section" style="display:none;">
             <div class="thinking-toggle" id="thinkingToggle">
@@ -229,6 +220,7 @@
             </div>
             <div class="thinking-content" id="thinkingContent"></div>
           </div>
+
           <!-- 思考动画 -->
           <div id="thinkingAnimation" class="thinking-animation" style="display:none;">
             <div class="thinking-dots">
@@ -236,91 +228,127 @@
             </div>
             <span class="thinking-text">AI 正在思考</span>
           </div>
-          <div id="aiOutputContent" class="ai-output-content"></div>
-          <div class="ai-cmd-bar">
-            <label class="cmd-label">指令</label>
-            <input type="text" id="cmdInput" placeholder="输入关键词：打包 / 打包成酒馆格式文风指令 / 清空底层" autocomplete="off">
-            <button id="cmdPackBtn" class="btn-sm btn-pack" title="打包为 TXT">打包</button>
-            <button id="cmdTavernBtn" class="btn-sm btn-tavern" title="打包为酒馆格式">酒馆格式</button>
+
+          <!-- AI 输出内容 -->
+          <div id="aiOutput" class="ai-output" style="display:none;">
+            <div class="ai-output-header">
+              <h3>生成的指令</h3>
+              <div class="output-actions">
+                <button id="toggleThinkingBtn" class="btn-icon" title="展开/收起 AI 思考过程" style="display:none;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/>
+                  </svg>
+                </button>
+                <button id="copyAiBtn" class="btn-icon" title="复制">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                  </svg>
+                </button>
+                <button id="downloadAiBtn" class="btn-icon" title="下载">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div id="aiOutputContent" class="ai-output-content"></div>
+          </div>
+
+          <!-- 续写 & 指令栏 -->
+          <div class="workspace-actions-bar">
+            <button id="aiContinueBtn" class="btn-continue" title="按照 AI 原思路继续续写" style="display:none;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="5,12 12,19 19,12"/><line x1="12" y1="19" x2="12" y2="5"/>
+              </svg>
+              续写
+            </button>
+            <div class="ai-cmd-bar">
+              <label class="cmd-label">指令</label>
+              <input type="text" id="cmdInput" placeholder="输入：打包 / 打包成酒馆格式文风指令 / 清空底层" autocomplete="off">
+              <button id="cmdPackBtn" class="btn-sm btn-pack" title="打包为 TXT">打包</button>
+              <button id="cmdTavernBtn" class="btn-sm btn-tavern" title="打包为酒馆格式">酒馆格式</button>
+            </div>
+          </div>
+
+          <!-- 快速模板 -->
+          <div class="workspace-presets">
+            <h3>快速模板</h3>
+            <div class="presets-grid" id="presetsGrid">
+              <div class="preset-card" data-preset="xiaohongshu">
+                <h3>小红书种草风</h3>
+                <p>活泼亲切、emoji丰富、突出体验感</p>
+              </div>
+              <div class="preset-card" data-preset="academic">
+                <h3>学术论文风</h3>
+                <p>严谨客观、逻辑清晰、引用规范</p>
+              </div>
+              <div class="preset-card" data-preset="storytelling">
+                <h3>故事叙述风</h3>
+                <p>画面感强、情感真挚、节奏起伏</p>
+              </div>
+              <div class="preset-card" data-preset="marketing">
+                <h3>营销文案风</h3>
+                <p>抓住痛点、突出卖点、号召行动</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 历史记录 -->
+          <div class="workspace-history">
+            <div class="history-header">
+              <h3>
+                <button id="historyToggleBtn" class="history-toggle-btn">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/>
+                  </svg>
+                  生成历史
+                  <span id="historyCount" class="history-count">0</span>
+                  <svg class="history-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="6,9 12,15 18,9"/>
+                  </svg>
+                </button>
+              </h3>
+              <button id="clearHistoryBtn" class="btn-sm btn-danger" title="清空历史" style="display:none;">清空</button>
+            </div>
+            <div id="historyPanel" class="history-panel collapsed">
+              <div id="historyList" class="history-list">
+                <div class="empty-state" style="padding:16px;">
+                  <p style="font-size:0.78rem;">暂无生成记录，点击「AI 生成指令」后自动保存</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 错误日志 -->
+          <div class="workspace-errors">
+            <div class="error-header">
+              <h3>
+                <button id="errorToggleBtn" class="error-toggle-btn">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                  </svg>
+                  错误日志
+                  <span id="errorCount" class="error-count-badge">0</span>
+                  <svg class="error-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="6,9 12,15 18,9"/>
+                  </svg>
+                </button>
+              </h3>
+              <button id="clearErrorBtn" class="btn-sm btn-danger" title="清空错误日志" style="display:none;">清空</button>
+            </div>
+            <div id="errorPanel" class="error-panel collapsed">
+              <div id="errorList" class="error-list">
+                <div class="empty-state" style="padding:16px;">
+                  <p style="font-size:0.78rem;">暂无错误记录，一切正常</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
     </div>
-
-    <!-- 快速模板 -->
-    <section class="presets-section">
-      <h2>快速模板</h2>
-      <div class="presets-grid" id="presetsGrid">
-        <div class="preset-card" data-preset="xiaohongshu">
-          <h3>小红书种草风</h3>
-          <p>活泼亲切、emoji丰富、突出体验感</p>
-        </div>
-        <div class="preset-card" data-preset="academic">
-          <h3>学术论文风</h3>
-          <p>严谨客观、逻辑清晰、引用规范</p>
-        </div>
-        <div class="preset-card" data-preset="storytelling">
-          <h3>故事叙述风</h3>
-          <p>画面感强、情感真挚、节奏起伏</p>
-        </div>
-        <div class="preset-card" data-preset="marketing">
-          <h3>营销文案风</h3>
-          <p>抓住痛点、突出卖点、号召行动</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- 历史记录面板 -->
-    <section class="history-section">
-      <div class="history-header">
-        <h2>
-          <button id="historyToggleBtn" class="history-toggle-btn">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/>
-            </svg>
-            生成历史
-            <span id="historyCount" class="history-count">0</span>
-            <svg class="history-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="6,9 12,15 18,9"/>
-            </svg>
-          </button>
-        </h2>
-        <button id="clearHistoryBtn" class="btn-sm btn-danger" title="清空历史" style="display:none;">清空</button>
-      </div>
-      <div id="historyPanel" class="history-panel collapsed">
-        <div id="historyList" class="history-list">
-          <div class="empty-state" style="padding:20px;">
-            <p style="font-size:0.8rem;">暂无生成记录，点击「AI 生成指令」后自动保存</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 错误日志面板 -->
-    <section class="error-section">
-      <div class="error-header">
-        <h2>
-          <button id="errorToggleBtn" class="error-toggle-btn">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-            </svg>
-            错误日志
-            <span id="errorCount" class="error-count-badge">0</span>
-            <svg class="error-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="6,9 12,15 18,9"/>
-            </svg>
-          </button>
-        </h2>
-        <button id="clearErrorBtn" class="btn-sm btn-danger" title="清空错误日志" style="display:none;">清空</button>
-      </div>
-      <div id="errorPanel" class="error-panel collapsed">
-        <div id="errorList" class="error-list">
-          <div class="empty-state" style="padding:20px;">
-            <p style="font-size:0.8rem;">暂无错误记录，一切正常</p>
-          </div>
-        </div>
-      </div>
-    </section>
   </div>
 
   <!-- Toast 提示 -->

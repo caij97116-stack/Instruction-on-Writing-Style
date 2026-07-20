@@ -1412,6 +1412,38 @@ function setupEventListeners() {
   categoryFilter.addEventListener('change', handleFilter);
 }
 
+// ========== 标签页切换 ==========
+const tabBtns = document.querySelectorAll('.tab-btn');
+const tabContents = document.querySelectorAll('.tab-content');
+const workspaceBadge = document.getElementById('workspaceBadge');
+const workspaceStatus = document.getElementById('workspaceStatus');
+
+function switchToTab(tabName) {
+  tabBtns.forEach(b => b.classList.remove('active'));
+  tabContents.forEach(c => c.classList.remove('active'));
+  document.querySelector('.tab-btn[data-tab="' + tabName + '"]').classList.add('active');
+  document.getElementById('tab' + (tabName === 'detail' ? 'Detail' : 'Workspace')).classList.add('active');
+}
+
+tabBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    switchToTab(btn.dataset.tab);
+  });
+});
+
+function signalWorkspaceActivity() {
+  workspaceBadge.style.display = 'inline';
+  workspaceStatus.textContent = 'AI 正在生成...';
+}
+function clearWorkspaceSignal() {
+  workspaceBadge.style.display = 'none';
+  if (currentAiInstruction) {
+    workspaceStatus.textContent = '当前指令：' + currentAiInstruction.authorName + '（' + currentAiInstruction.content.length + '字）';
+  } else {
+    workspaceStatus.textContent = '就绪 — 请先在作者详情中点击「AI 生成指令」';
+  }
+}
+
 // ========== 搜索处理 ==========
 function handleSearch(e) {
   currentSearch = e.target.value.trim().toLowerCase();
@@ -2033,6 +2065,10 @@ async function generateAiInstruction(isContinue = false) {
 
   isContinueMode = isContinue;
 
+  // 自动切换到 AI 工作区
+  switchToTab('workspace');
+  signalWorkspaceActivity();
+
   // 显示 AI 输出区
   aiOutput.style.display = 'block';
   showThinking();
@@ -2114,11 +2150,13 @@ async function generateAiInstruction(isContinue = false) {
     aiOutput.scrollIntoView({ behavior: 'smooth' });
     aiContinueBtn.style.display = 'inline-flex';
     showToast(isContinue ? '续写完成，已存入底层' : 'AI 指令已存入底层，可用「续写」继续完善');
+    clearWorkspaceSignal();
   } catch (e) {
     hideThinking();
     aiOutputContent.className = 'ai-output-content';
     aiOutputContent.innerHTML = '<span style="color:var(--danger);">AI 调用失败：' + e.message + '</span>';
     showErrorModal('AI 生成指令', e.message, '请求地址: ' + url + '\n模型: ' + (model || '默认') + '\n作家: ' + (currentAuthor?.name || '未知') + '\n' + (e.stack || ''));
+    clearWorkspaceSignal();
   } finally {
     aiGenerateBtn.classList.remove('loading');
     aiGenerateBtn.disabled = false;
@@ -2654,6 +2692,10 @@ function viewHistoryItem(index) {
   showReasoning(item.reasoning);
   aiContinueBtn.style.display = 'inline-flex';
   hideThinking();
+
+  // 自动切换到 AI 工作区
+  switchToTab('workspace');
+  clearWorkspaceSignal();
 
   // 高亮选中项
   historyList.querySelectorAll('.history-item').forEach(el => el.classList.remove('active'));
