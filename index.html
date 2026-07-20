@@ -68,6 +68,43 @@
           </button>
         </div>
         <div id="apiStatus" class="api-status"></div>
+
+        <!-- 知识增强区（免费） -->
+        <div class="knowledge-section">
+          <div class="knowledge-header">
+            <span class="knowledge-title">知识增强（免费）</span>
+            <span class="knowledge-badge">免费</span>
+          </div>
+          <p class="knowledge-desc">让 AI 生成前先联网搜索作家资料，解决"AI 太笨不知道"的问题</p>
+          <div class="knowledge-row">
+            <div class="form-group" style="flex:2;">
+              <label for="geminiKey">Gemini API Key（Google 免费）</label>
+              <div class="api-key-row">
+                <input type="password" id="geminiKey" placeholder="AIza... 从 aistudio.google.com 免费获取">
+                <button id="toggleGeminiKeyBtn" class="btn-sm" title="显示/隐藏">👁</button>
+              </div>
+              <span class="field-hint">完全免费，无需绑卡，<a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">点此获取 →</a></span>
+            </div>
+            <div class="form-group" style="flex:1;">
+              <label for="jinaToggle">Jina AI Reader（无需 Key）</label>
+              <div class="toggle-row">
+                <label class="toggle-switch">
+                  <input type="checkbox" id="jinaToggle" checked>
+                  <span class="toggle-slider"></span>
+                </label>
+                <span class="toggle-label">自动搜索网页</span>
+              </div>
+              <span class="field-hint">完全免费，无需注册，自动抓取网页内容</span>
+            </div>
+          </div>
+          <div class="knowledge-row">
+            <label class="checkbox-label">
+              <input type="checkbox" id="knowledgeEnhanceToggle" checked>
+              <span>生成指令前自动联网搜索补充资料</span>
+            </label>
+          </div>
+          <div id="knowledgeStatus" class="api-status"></div>
+        </div>
       </div>
     </section>
 
@@ -132,6 +169,12 @@
               </svg>
               AI 生成指令
             </button>
+            <button id="aiContinueBtn" class="btn-continue" title="按照 AI 原思路继续续写" style="display:none;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="5,12 12,19 19,12"/><line x1="12" y1="19" x2="12" y2="5"/>
+              </svg>
+              续写
+            </button>
             <button id="copyDetailBtn" class="btn-icon" title="复制指令">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
@@ -156,6 +199,11 @@
           <div class="ai-output-header">
             <h3>AI 分析结果</h3>
             <div class="output-actions">
+              <button id="toggleThinkingBtn" class="btn-icon" title="展开/收起 AI 思考过程" style="display:none;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/>
+                </svg>
+              </button>
               <button id="copyAiBtn" class="btn-icon" title="复制">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
@@ -169,6 +217,24 @@
                 </svg>
               </button>
             </div>
+          </div>
+          <!-- AI 思考过程（可展开） -->
+          <div id="thinkingSection" class="thinking-section" style="display:none;">
+            <div class="thinking-toggle" id="thinkingToggle">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9,18 15,12 9,6"/>
+              </svg>
+              <span>AI 思考过程</span>
+              <span id="thinkingTokenCount" class="thinking-token-count"></span>
+            </div>
+            <div class="thinking-content" id="thinkingContent"></div>
+          </div>
+          <!-- 思考动画 -->
+          <div id="thinkingAnimation" class="thinking-animation" style="display:none;">
+            <div class="thinking-dots">
+              <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            </div>
+            <span class="thinking-text">AI 正在思考</span>
           </div>
           <div id="aiOutputContent" class="ai-output-content"></div>
           <div class="ai-cmd-bar">
@@ -203,10 +269,102 @@
         </div>
       </div>
     </section>
+
+    <!-- 历史记录面板 -->
+    <section class="history-section">
+      <div class="history-header">
+        <h2>
+          <button id="historyToggleBtn" class="history-toggle-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/>
+            </svg>
+            生成历史
+            <span id="historyCount" class="history-count">0</span>
+            <svg class="history-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6,9 12,15 18,9"/>
+            </svg>
+          </button>
+        </h2>
+        <button id="clearHistoryBtn" class="btn-sm btn-danger" title="清空历史" style="display:none;">清空</button>
+      </div>
+      <div id="historyPanel" class="history-panel collapsed">
+        <div id="historyList" class="history-list">
+          <div class="empty-state" style="padding:20px;">
+            <p style="font-size:0.8rem;">暂无生成记录，点击「AI 生成指令」后自动保存</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 错误日志面板 -->
+    <section class="error-section">
+      <div class="error-header">
+        <h2>
+          <button id="errorToggleBtn" class="error-toggle-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            错误日志
+            <span id="errorCount" class="error-count-badge">0</span>
+            <svg class="error-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6,9 12,15 18,9"/>
+            </svg>
+          </button>
+        </h2>
+        <button id="clearErrorBtn" class="btn-sm btn-danger" title="清空错误日志" style="display:none;">清空</button>
+      </div>
+      <div id="errorPanel" class="error-panel collapsed">
+        <div id="errorList" class="error-list">
+          <div class="empty-state" style="padding:20px;">
+            <p style="font-size:0.8rem;">暂无错误记录，一切正常</p>
+          </div>
+        </div>
+      </div>
+    </section>
   </div>
 
   <!-- Toast 提示 -->
   <div id="toast" class="toast"></div>
+
+  <!-- 错误弹窗 -->
+  <div id="errorModal" class="error-modal-overlay" style="display:none;">
+    <div class="error-modal">
+      <div class="error-modal-header">
+        <div class="error-modal-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+          </svg>
+        </div>
+        <div class="error-modal-title">
+          <h3 id="errorModalTitle">API 调用失败</h3>
+          <span id="errorModalType" class="error-modal-type"></span>
+        </div>
+        <button id="errorModalClose" class="error-modal-close">&times;</button>
+      </div>
+      <div class="error-modal-body">
+        <div class="error-modal-section">
+          <label>失败环节</label>
+          <span id="errorModalStage" class="error-modal-stage"></span>
+        </div>
+        <div class="error-modal-section">
+          <label>错误信息</label>
+          <p id="errorModalMessage"></p>
+        </div>
+        <div class="error-modal-section">
+          <label>错误详情 / 代码</label>
+          <pre id="errorModalDetail" class="error-modal-code"></pre>
+        </div>
+        <div class="error-modal-section">
+          <label>发生时间</label>
+          <span id="errorModalTime" class="error-modal-time"></span>
+        </div>
+      </div>
+      <div class="error-modal-footer">
+        <button id="errorModalCopyBtn" class="btn-outline">复制错误信息</button>
+        <button id="errorModalConfirmBtn" class="btn-ai">知道了</button>
+      </div>
+    </div>
+  </div>
 
   <script src="script.js"></script>
 </body>

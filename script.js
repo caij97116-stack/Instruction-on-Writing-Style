@@ -1608,7 +1608,7 @@ document.getElementById('fetchModelsBtn').addEventListener('click', async () => 
   } catch (e) {
     apiStatus.className = 'api-status error';
     apiStatus.textContent = '拉取失败: ' + e.message;
-    showToast('拉取模型失败');
+    showErrorModal('拉取模型', e.message, '请求地址: ' + modelsUrl + '\n' + (e.stack || ''));
   }
 });
 
@@ -1636,7 +1636,7 @@ document.getElementById('testApiBtn').addEventListener('click', async () => {
   } catch (e) {
     apiStatus.className = 'api-status error';
     apiStatus.textContent = '连接失败: ' + e.message;
-    showToast('连接失败');
+    showErrorModal('测试连接', e.message, '请求地址: ' + url + '\n模型: ' + (model || '默认') + '\n' + (e.stack || ''));
   }
 });
 
@@ -1695,6 +1695,160 @@ document.getElementById('deletePresetBtn').addEventListener('click', () => {
   showToast('已删除预设');
 });
 
+// ========== 知识增强：Gemini 联网搜索 + Jina AI Reader ==========
+const geminiKey = document.getElementById('geminiKey');
+const knowledgeEnhanceToggle = document.getElementById('knowledgeEnhanceToggle');
+const jinaToggle = document.getElementById('jinaToggle');
+const knowledgeStatus = document.getElementById('knowledgeStatus');
+
+// Gemini Key 显示/隐藏切换
+document.getElementById('toggleGeminiKeyBtn').addEventListener('click', () => {
+  const btn = document.getElementById('toggleGeminiKeyBtn');
+  if (geminiKey.type === 'password') {
+    geminiKey.type = 'text'; btn.textContent = '🙈';
+  } else {
+    geminiKey.type = 'password'; btn.textContent = '👁';
+  }
+});
+
+// 保存 Gemini Key 到 localStorage
+function saveGeminiKey(key) { localStorage.setItem('gemini_api_key', key); }
+function getGeminiKey() { return localStorage.getItem('gemini_api_key') || ''; }
+
+// 加载已保存的 Gemini Key
+(function loadGeminiKey() {
+  const saved = getGeminiKey();
+  if (saved) geminiKey.value = saved;
+})();
+
+geminiKey.addEventListener('change', () => {
+  saveGeminiKey(geminiKey.value.trim());
+});
+
+// 使用 Gemini 联网搜索作家资料
+async function searchWithGemini(authorName) {
+  const key = geminiKey.value.trim() || getGeminiKey();
+  if (!key) return null;
+
+  knowledgeStatus.className = 'api-status loading';
+  knowledgeStatus.textContent = 'Gemini 正在搜索「' + authorName + '」...';
+
+  const query = authorName + ' 作家 写作风格 文学特点 生平';
+  const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + key;
+
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: '请用中文简要介绍作家「' + query + '」，包括：1.生平背景 2.代表作品 3.写作风格特点 4.文学地位。用300字以内，通俗易懂，不要学术术语。' }] }],
+        tools: [{ google_search: {} }],
+        generationConfig: { maxOutputTokens: 800 }
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.text();
+      console.warn('Gemini 搜索失败:', err);
+      return null;
+    }
+
+    const data = await res.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    if (text) {
+      knowledgeStatus.className = 'api-status success';
+      knowledgeStatus.textContent = 'Gemini 搜索成功，获取到 ' + text.length + ' 字资料';
+    }
+    return text || null;
+  } catch (e) {
+    console.warn('Gemini 搜索异常:', e.message);
+    return null;
+  }
+}
+
+// 使用 Jina AI Reader 抓取网页内容（完全免费，无需 Key）
+async function searchWithJina(authorName) {
+  if (!jinaToggle.checked) return null;
+
+  knowledgeStatus.className = 'api-status loading';
+  knowledgeStatus.textContent = 'Jina 正在搜索「' + authorName + '」...';
+
+  try {
+    // 使用 Jina AI 搜索 API
+    const query = authorName + ' 作家 写作风格 文学特点';
+    const searchUrl = 'https://s.jina.ai/' + encodeURIComponent(query);
+    const res = await fetch(searchUrl, {
+      headers: {
+        'Accept': 'application/json',
+        'X-Return-Format': 'markdown'
+      }
+    });
+
+    if (!res.ok) {
+      console.warn('Jina 搜索失败:', res.status);
+      return null;
+    }
+
+    const data = await res.json();
+
+    // 兼容多种响应格式
+    let text = '';
+    if (data.data?.text) {
+      text = data.data.text;
+    } else if (data.data?.results && Array.isArray(data.data.results)) {
+      text = data.data.results
+        .map(r => '## ' + (r.title || '') + '\n' + (r.content || r.description || ''))
+        .join('\n\n');
+    } else if (typeof data.data === 'string') {
+      text = data.data;
+    } else if (data.text) {
+      text = data.text;
+    }
+
+    if (text && text.length > 50) {
+      // 限制长度，避免 token 过多
+      const trimmed = text.substring(0, 1200);
+      knowledgeStatus.className = 'api-status success';
+      knowledgeStatus.textContent = 'Jina 搜索成功，获取到 ' + trimmed.length + ' 字资料';
+      return trimmed;
+    }
+    return null;
+  } catch (e) {
+    console.warn('Jina 搜索异常:', e.message);
+    return null;
+  }
+}
+
+// 综合知识增强：先 Jina 后 Gemini
+async function enhanceKnowledge(authorName) {
+  if (!knowledgeEnhanceToggle.checked) return '';
+  if (!authorName) return '';
+
+  knowledgeStatus.className = '';
+  knowledgeStatus.textContent = '';
+
+  let extraInfo = '';
+
+  // 先尝试 Jina（免费，无需 Key）
+  const jinaResult = await searchWithJina(authorName);
+  if (jinaResult) {
+    extraInfo += '\n\n【联网搜索补充资料（来自 Jina AI）】\n' + jinaResult;
+  }
+
+  // 再尝试 Gemini（免费，需 Key）
+  const geminiResult = await searchWithGemini(authorName);
+  if (geminiResult) {
+    extraInfo += '\n\n【联网搜索补充资料（来自 Gemini）】\n' + geminiResult;
+  }
+
+  if (!extraInfo) {
+    knowledgeStatus.className = 'api-status';
+    knowledgeStatus.textContent = '未配置知识增强或搜索无结果，将仅使用内置资料';
+  }
+
+  return extraInfo;
+}
+
 // ========== 复制/下载详情 ==========
 document.getElementById('copyDetailBtn').addEventListener('click', () => {
   if (!currentAuthor) { showToast('请先选择一位作家'); return; }
@@ -1728,15 +1882,73 @@ function buildInstructionText(author) {
 
 // ========== AI 生成指令 ==========
 const aiGenerateBtn = document.getElementById('aiGenerateBtn');
+const aiContinueBtn = document.getElementById('aiContinueBtn');
 const aiOutput = document.getElementById('aiOutput');
 const aiOutputContent = document.getElementById('aiOutputContent');
+const thinkingAnimation = document.getElementById('thinkingAnimation');
+const thinkingSection = document.getElementById('thinkingSection');
+const thinkingContent = document.getElementById('thinkingContent');
+const thinkingToggle = document.getElementById('thinkingToggle');
+const thinkingTokenCount = document.getElementById('thinkingTokenCount');
+const toggleThinkingBtn = document.getElementById('toggleThinkingBtn');
 let currentAiInstruction = null; // 底层存储：AI 生成的那段指令文本
+let currentReasoning = null; // 底层存储：AI 思考过程
+let isContinueMode = false; // 是否续写模式
 
-function buildAiPrompt(author) {
+// 思考过程展开/收起
+thinkingToggle.addEventListener('click', () => {
+  const expanded = thinkingContent.classList.toggle('expanded');
+  thinkingToggle.classList.toggle('expanded', expanded);
+});
+
+toggleThinkingBtn.addEventListener('click', () => {
+  if (thinkingSection.style.display === 'none') {
+    thinkingSection.style.display = 'block';
+    thinkingContent.classList.add('expanded');
+    thinkingToggle.classList.add('expanded');
+    toggleThinkingBtn.classList.add('active');
+  } else {
+    thinkingSection.style.display = 'none';
+    thinkingContent.classList.remove('expanded');
+    thinkingToggle.classList.remove('expanded');
+    toggleThinkingBtn.classList.remove('active');
+  }
+});
+
+// 显示思考动画
+function showThinking() {
+  thinkingAnimation.style.display = 'flex';
+  aiOutputContent.innerHTML = '';
+  aiContinueBtn.style.display = 'none';
+}
+
+// 隐藏思考动画
+function hideThinking() {
+  thinkingAnimation.style.display = 'none';
+}
+
+// 显示推理内容
+function showReasoning(reasoning) {
+  if (!reasoning || reasoning.trim().length === 0) {
+    thinkingSection.style.display = 'none';
+    toggleThinkingBtn.style.display = 'none';
+    return;
+  }
+  currentReasoning = reasoning;
+  thinkingSection.style.display = 'block';
+  thinkingContent.innerHTML = reasoning.replace(/\n/g, '<br>');
+  thinkingContent.classList.add('expanded');
+  thinkingToggle.classList.add('expanded');
+  thinkingTokenCount.textContent = '约 ' + reasoning.length + ' 字';
+  toggleThinkingBtn.style.display = 'inline-flex';
+  toggleThinkingBtn.classList.add('active');
+}
+
+function buildAiPrompt(author, extraKnowledge = '') {
   const chars = author.characteristics.split('；').filter(c => c.trim());
   let charsText = chars.map((c, i) => (i + 1) + '. ' + c.trim()).join('\n');
 
-  return `你是一个写作教练。现在你要根据下面的资料，为一位写作者生成一份详细的写作风格指令。
+  let prompt = `你是一个写作教练。现在你要根据下面的资料，为一位写作者生成一份详细的写作风格指令。
 
 请你阅读下面的全部资料，然后按照"输出格式"的要求，生成一份完整的写作风格指令。
 
@@ -1754,7 +1966,17 @@ ${charsText}
 —— 出处：${author.exampleSource}
 
 【写作禁忌】
-${author.avoid}
+${author.avoid}`;
+
+  // 如果有联网搜索的补充资料，追加到 prompt
+  if (extraKnowledge) {
+    prompt += `
+
+【联网搜索补充资料（来自互联网，请参考这些信息丰富你的理解）】
+${extraKnowledge}`;
+  }
+
+  prompt += `
 
 【输出格式】
 请严格按照下面的结构输出，每个部分都要写，不要跳过任何部分：
@@ -1797,9 +2019,11 @@ ${author.avoid}
 - 例子要简单明了，一看就懂
 - 不要空洞地说"语言优美""富有诗意"这种废话，要说出"怎么写出优美的语言"
 - 格式要清晰，用换行和数字编号，方便阅读`;
+
+  return prompt;
 }
 
-async function generateAiInstruction() {
+async function generateAiInstruction(isContinue = false) {
   if (!currentAuthor) { showToast('请先从左侧选择一位作家'); return; }
 
   const url = apiUrl.value.trim();
@@ -1807,14 +2031,39 @@ async function generateAiInstruction() {
   const model = getModel();
   if (!url || !key) { showToast('请先在 API 面板配置地址和 Key'); apiToggleBtn.click(); return; }
 
+  isContinueMode = isContinue;
+
   // 显示 AI 输出区
   aiOutput.style.display = 'block';
-  aiOutputContent.className = 'ai-output-content loading-text';
-  aiOutputContent.textContent = '正在调用 AI 分析「' + currentAuthor.name + '」的文风，请稍候...';
+  showThinking();
+  hideThinkingContent();
   aiGenerateBtn.classList.add('loading');
   aiGenerateBtn.disabled = true;
+  aiContinueBtn.style.display = 'none';
+  aiContinueBtn.classList.remove('loading');
+  aiContinueBtn.disabled = false;
 
-  const prompt = buildAiPrompt(currentAuthor);
+  let prompt;
+  if (isContinue && currentAiInstruction) {
+    // 续写模式：用之前的输出作为上下文
+    prompt = '你是一个写作教练。之前你为「' + currentAuthor.name + '」风格生成了一份写作指令，下面是已经写好的内容：\n\n' + currentAiInstruction.content + '\n\n请你继续完善这份指令，沿着上面的思路往下写。可以补充更多写作技巧、更多例子、更详细的说明。用同样通俗易懂的语言，保持格式一致。不要重复已经写过的内容，而是补充新的、更深入的内容。';
+
+    // 续写时也做知识增强
+    if (knowledgeEnhanceToggle.checked) {
+      const extra = await enhanceKnowledge(currentAuthor.name);
+      if (extra) {
+        prompt += '\n\n【联网搜索补充资料】\n' + extra;
+      }
+    }
+  } else {
+    // 新生成模式
+    let extraKnowledge = '';
+    if (knowledgeEnhanceToggle.checked) {
+      aiOutputContent.innerHTML = '<span style="color:var(--text-muted);">正在联网搜索「' + currentAuthor.name + '」的补充资料...</span>';
+      extraKnowledge = await enhanceKnowledge(currentAuthor.name);
+    }
+    prompt = buildAiPrompt(currentAuthor, extraKnowledge);
+  }
 
   try {
     const res = await fetch(url, {
@@ -1834,29 +2083,68 @@ async function generateAiInstruction() {
     }
 
     const data = await res.json();
-    const content = data.choices?.[0]?.message?.content || '（AI 未返回内容）';
+    const message = data.choices?.[0]?.message || {};
+    const content = message.content || '（AI 未返回内容）';
+    const reasoning = message.reasoning_content || '';
 
-    // 存入底层
-    currentAiInstruction = {
-      authorName: currentAuthor.name,
-      authorId: currentAuthor.id,
-      content: content,
-      timestamp: new Date().toISOString()
-    };
+    // 显示推理内容
+    showReasoning(reasoning);
 
+    if (isContinue && currentAiInstruction) {
+      // 续写模式：追加内容
+      currentAiInstruction.content = currentAiInstruction.content + '\n\n---\n## 续写内容\n\n' + content;
+      currentAiInstruction.timestamp = new Date().toISOString();
+    } else {
+      // 存入底层
+      currentAiInstruction = {
+        authorName: currentAuthor.name,
+        authorId: currentAuthor.id,
+        content: content,
+        reasoning: reasoning,
+        timestamp: new Date().toISOString()
+      };
+    }
+
+    // 保存到历史记录
+    saveToHistory(currentAiInstruction);
+
+    hideThinking();
     aiOutputContent.className = 'ai-output-content';
-    aiOutputContent.innerHTML = formatMarkdown(content);
+    aiOutputContent.innerHTML = formatMarkdown(currentAiInstruction.content);
     aiOutput.scrollIntoView({ behavior: 'smooth' });
-    showToast('AI 指令已存入底层，可用「打包」导出');
+    aiContinueBtn.style.display = 'inline-flex';
+    showToast(isContinue ? '续写完成，已存入底层' : 'AI 指令已存入底层，可用「续写」继续完善');
   } catch (e) {
+    hideThinking();
     aiOutputContent.className = 'ai-output-content';
     aiOutputContent.innerHTML = '<span style="color:var(--danger);">AI 调用失败：' + e.message + '</span>';
-    showToast('AI 调用失败');
+    showErrorModal('AI 生成指令', e.message, '请求地址: ' + url + '\n模型: ' + (model || '默认') + '\n作家: ' + (currentAuthor?.name || '未知') + '\n' + (e.stack || ''));
   } finally {
     aiGenerateBtn.classList.remove('loading');
     aiGenerateBtn.disabled = false;
+    aiContinueBtn.classList.remove('loading');
+    aiContinueBtn.disabled = false;
   }
 }
+
+function hideThinkingContent() {
+  thinkingSection.style.display = 'none';
+  thinkingContent.classList.remove('expanded');
+  thinkingToggle.classList.remove('expanded');
+  toggleThinkingBtn.style.display = 'none';
+  toggleThinkingBtn.classList.remove('active');
+}
+
+// 续写功能
+async function continueWriting() {
+  if (!currentAiInstruction) { showToast('请先生成一段指令后再续写'); return; }
+  aiContinueBtn.classList.add('loading');
+  aiContinueBtn.disabled = true;
+  await generateAiInstruction(true);
+}
+
+aiGenerateBtn.addEventListener('click', () => generateAiInstruction(false));
+aiContinueBtn.addEventListener('click', continueWriting);
 
 function formatMarkdown(text) {
   let html = text
@@ -1881,8 +2169,6 @@ function formatMarkdown(text) {
 
   return '<p style="margin-bottom:6px;">' + html + '</p>';
 }
-
-aiGenerateBtn.addEventListener('click', generateAiInstruction);
 
 // AI 输出复制
 document.getElementById('copyAiBtn').addEventListener('click', () => {
@@ -2035,6 +2321,386 @@ document.getElementById('presetsGrid').addEventListener('click', (e) => {
   document.querySelectorAll('.author-item').forEach(el => el.classList.remove('active'));
   showToast('已加载模板: ' + p.name);
 });
+
+// ========== 错误弹窗与错误日志管理 ==========
+const ERROR_LOG_KEY = 'api_error_log';
+const errorModal = document.getElementById('errorModal');
+const errorModalTitle = document.getElementById('errorModalTitle');
+const errorModalType = document.getElementById('errorModalType');
+const errorModalStage = document.getElementById('errorModalStage');
+const errorModalMessage = document.getElementById('errorModalMessage');
+const errorModalDetail = document.getElementById('errorModalDetail');
+const errorModalTime = document.getElementById('errorModalTime');
+const errorModalClose = document.getElementById('errorModalClose');
+const errorModalConfirmBtn = document.getElementById('errorModalConfirmBtn');
+const errorModalCopyBtn = document.getElementById('errorModalCopyBtn');
+const errorToggleBtn = document.getElementById('errorToggleBtn');
+const errorPanel = document.getElementById('errorPanel');
+const errorList = document.getElementById('errorList');
+const errorCount = document.getElementById('errorCount');
+const clearErrorBtn = document.getElementById('clearErrorBtn');
+
+let currentErrorModalData = null;
+
+function getErrorLogs() {
+  try { return JSON.parse(localStorage.getItem(ERROR_LOG_KEY) || '[]'); } catch { return []; }
+}
+function saveErrorLogs(list) { localStorage.setItem(ERROR_LOG_KEY, JSON.stringify(list)); }
+
+function logError(stage, message, detail) {
+  const entry = {
+    stage: stage,
+    message: message,
+    detail: detail || '',
+    timestamp: new Date().toISOString()
+  };
+  const logs = getErrorLogs();
+  logs.push(entry);
+  if (logs.length > 100) logs.splice(0, logs.length - 100);
+  saveErrorLogs(logs);
+  renderErrorLogs();
+}
+
+function showErrorModal(stage, message, detail) {
+  currentErrorModalData = { stage, message, detail, timestamp: new Date().toISOString() };
+
+  // 分类错误类型
+  let typeLabel = 'API 错误';
+  let title = 'API 调用失败';
+  if (stage === '拉取模型') {
+    typeLabel = '模型拉取';
+    title = '模型拉取失败';
+  } else if (stage === '测试连接') {
+    typeLabel = '连接测试';
+    title = '连接测试失败';
+  } else if (stage === 'AI 生成指令') {
+    typeLabel = 'AI 生成';
+    title = 'AI 生成指令失败';
+  } else if (stage === '知识增强') {
+    typeLabel = '知识增强';
+    title = '知识增强搜索失败';
+  }
+
+  errorModalTitle.textContent = title;
+  errorModalType.textContent = typeLabel;
+  errorModalStage.textContent = stage;
+  errorModalMessage.textContent = message;
+  errorModalDetail.textContent = detail || '（无详细代码）';
+  errorModalTime.textContent = new Date(currentErrorModalData.timestamp).toLocaleString('zh-CN');
+  errorModal.style.display = 'flex';
+
+  // 存到错误日志
+  logError(stage, message, detail);
+}
+
+function closeErrorModal() {
+  errorModal.style.display = 'none';
+  currentErrorModalData = null;
+}
+
+errorModalClose.addEventListener('click', closeErrorModal);
+errorModalConfirmBtn.addEventListener('click', closeErrorModal);
+errorModal.addEventListener('click', (e) => {
+  if (e.target === errorModal) closeErrorModal();
+});
+
+// 复制错误信息
+errorModalCopyBtn.addEventListener('click', () => {
+  if (!currentErrorModalData) return;
+  const text = [
+    '失败环节: ' + currentErrorModalData.stage,
+    '错误信息: ' + currentErrorModalData.message,
+    '错误详情: ' + currentErrorModalData.detail,
+    '发生时间: ' + new Date(currentErrorModalData.timestamp).toLocaleString('zh-CN')
+  ].join('\n');
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('错误信息已复制');
+  }).catch(() => {
+    showToast('复制失败，请手动复制');
+  });
+});
+
+// 错误日志面板渲染
+function renderErrorLogs() {
+  const logs = getErrorLogs();
+  errorCount.textContent = logs.length;
+
+  if (logs.length === 0) {
+    errorList.innerHTML = '<div class="empty-state" style="padding:20px;"><p style="font-size:0.8rem;">暂无错误记录，一切正常</p></div>';
+    clearErrorBtn.style.display = 'none';
+  } else {
+    clearErrorBtn.style.display = 'inline-flex';
+    errorList.innerHTML = logs.map((e, i) => {
+      const date = new Date(e.timestamp);
+      const timeStr = date.toLocaleDateString('zh-CN') + ' ' + date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      const shortMsg = e.message.substring(0, 60) + (e.message.length > 60 ? '...' : '');
+      return `
+        <div class="error-item" data-index="${i}">
+          <div class="error-item-info">
+            <div class="error-item-stage">${e.stage}</div>
+            <div class="error-item-message">${shortMsg}</div>
+            <div class="error-item-time">${timeStr}</div>
+          </div>
+          <div class="error-item-actions">
+            <button class="btn-icon view-error-btn" data-index="${i}" title="查看详情">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+            <button class="btn-icon delete-error-btn" data-index="${i}" title="删除">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3,6 5,6 21,6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+              </svg>
+            </button>
+          </div>
+        </div>`;
+    }).join('');
+
+    // 绑定事件
+    errorList.querySelectorAll('.view-error-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const idx = parseInt(btn.dataset.index);
+        viewErrorDetail(idx);
+      });
+    });
+    errorList.querySelectorAll('.delete-error-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const idx = parseInt(btn.dataset.index);
+        deleteErrorItem(idx);
+      });
+    });
+    errorList.querySelectorAll('.error-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const idx = parseInt(item.dataset.index);
+        viewErrorDetail(idx);
+      });
+    });
+  }
+}
+
+function viewErrorDetail(index) {
+  const logs = getErrorLogs();
+  const e = logs[index];
+  if (!e) return;
+  showErrorModal(e.stage, e.message, e.detail);
+}
+
+function deleteErrorItem(index) {
+  const logs = getErrorLogs();
+  logs.splice(index, 1);
+  saveErrorLogs(logs);
+  renderErrorLogs();
+}
+
+// 错误面板展开/收起
+errorToggleBtn.addEventListener('click', () => {
+  const expanded = errorPanel.classList.toggle('expanded');
+  errorPanel.classList.toggle('collapsed', !expanded);
+  errorToggleBtn.classList.toggle('expanded', expanded);
+});
+
+// 清空全部错误
+clearErrorBtn.addEventListener('click', () => {
+  if (!confirm('确定清空所有错误日志？')) return;
+  saveErrorLogs([]);
+  renderErrorLogs();
+  showToast('错误日志已清空');
+});
+
+// 页面加载时渲染错误日志
+(function initErrorLogs() {
+  renderErrorLogs();
+})();
+
+// ========== 历史记录管理 ==========
+const HISTORY_KEY = 'ai_instruction_history';
+const historyToggleBtn = document.getElementById('historyToggleBtn');
+const historyPanel = document.getElementById('historyPanel');
+const historyList = document.getElementById('historyList');
+const historyCount = document.getElementById('historyCount');
+const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+
+function getHistory() {
+  try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); } catch { return []; }
+}
+function saveHistory(list) { localStorage.setItem(HISTORY_KEY, JSON.stringify(list)); }
+
+function saveToHistory(instruction) {
+  const history = getHistory();
+  // 如果续写模式，更新最后一条而不是新增
+  if (isContinueMode && history.length > 0) {
+    history[history.length - 1] = {
+      authorName: instruction.authorName,
+      authorId: instruction.authorId,
+      content: instruction.content,
+      reasoning: instruction.reasoning || '',
+      timestamp: instruction.timestamp
+    };
+  } else {
+    history.push({
+      authorName: instruction.authorName,
+      authorId: instruction.authorId,
+      content: instruction.content,
+      reasoning: instruction.reasoning || '',
+      timestamp: instruction.timestamp
+    });
+  }
+  // 最多保留 50 条
+  if (history.length > 50) history.splice(0, history.length - 50);
+  saveHistory(history);
+  renderHistory();
+}
+
+function renderHistory() {
+  const history = getHistory();
+  historyCount.textContent = history.length;
+
+  if (history.length === 0) {
+    historyList.innerHTML = '<div class="empty-state" style="padding:20px;"><p style="font-size:0.8rem;">暂无生成记录，点击「AI 生成指令」后自动保存</p></div>';
+    clearHistoryBtn.style.display = 'none';
+  } else {
+    clearHistoryBtn.style.display = 'inline-flex';
+    historyList.innerHTML = history.map((h, i) => {
+      const date = new Date(h.timestamp);
+      const timeStr = date.toLocaleDateString('zh-CN') + ' ' + date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+      const preview = h.content.substring(0, 80).replace(/\n/g, ' ') + '...';
+      return `
+        <div class="history-item" data-index="${i}">
+          <div class="history-item-info">
+            <div class="history-item-title">${h.authorName} - 文风指令</div>
+            <div class="history-item-meta">
+              <span>${timeStr}</span>
+              <span>${h.content.length} 字</span>
+              ${h.reasoning ? '<span>含思考过程</span>' : ''}
+            </div>
+          </div>
+          <div class="history-item-actions">
+            <button class="btn-icon view-history-btn" data-index="${i}" title="查看">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+            <button class="btn-icon download-history-btn" data-index="${i}" title="下载">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+            </button>
+            <button class="btn-icon delete-history-btn" data-index="${i}" title="删除">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3,6 5,6 21,6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+              </svg>
+            </button>
+          </div>
+        </div>`;
+    }).join('');
+
+    // 绑定事件
+    historyList.querySelectorAll('.view-history-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const idx = parseInt(btn.dataset.index);
+        viewHistoryItem(idx);
+      });
+    });
+    historyList.querySelectorAll('.download-history-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const idx = parseInt(btn.dataset.index);
+        downloadHistoryItem(idx);
+      });
+    });
+    historyList.querySelectorAll('.delete-history-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const idx = parseInt(btn.dataset.index);
+        deleteHistoryItem(idx);
+      });
+    });
+    historyList.querySelectorAll('.history-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const idx = parseInt(item.dataset.index);
+        viewHistoryItem(idx);
+      });
+    });
+  }
+}
+
+function viewHistoryItem(index) {
+  const history = getHistory();
+  const item = history[index];
+  if (!item) return;
+
+  // 加载到当前显示
+  currentAiInstruction = {
+    authorName: item.authorName,
+    authorId: item.authorId,
+    content: item.content,
+    reasoning: item.reasoning,
+    timestamp: item.timestamp
+  };
+
+  // 找到对应的作者
+  const author = authors.find(a => a.id === item.authorId);
+  if (author) {
+    currentAuthor = author;
+    renderAuthorDetail();
+  }
+
+  aiOutput.style.display = 'block';
+  aiOutputContent.className = 'ai-output-content';
+  aiOutputContent.innerHTML = formatMarkdown(item.content);
+  showReasoning(item.reasoning);
+  aiContinueBtn.style.display = 'inline-flex';
+  hideThinking();
+
+  // 高亮选中项
+  historyList.querySelectorAll('.history-item').forEach(el => el.classList.remove('active'));
+  const target = historyList.querySelector(`.history-item[data-index="${index}"]`);
+  if (target) target.classList.add('active');
+
+  showToast('已加载历史记录: ' + item.authorName);
+}
+
+function downloadHistoryItem(index) {
+  const history = getHistory();
+  const item = history[index];
+  if (!item) return;
+  const name = item.authorName || '未命名';
+  const text = item.content;
+  downloadFile('文风指令_' + name + '_' + new Date(item.timestamp).toISOString().slice(0, 10) + '.txt', text, 'text/plain;charset=utf-8');
+  showToast('已下载: ' + name);
+}
+
+function deleteHistoryItem(index) {
+  if (!confirm('确定删除这条记录？')) return;
+  const history = getHistory();
+  history.splice(index, 1);
+  saveHistory(history);
+  renderHistory();
+  showToast('已删除');
+}
+
+// 历史面板展开/收起
+historyToggleBtn.addEventListener('click', () => {
+  const expanded = historyPanel.classList.toggle('expanded');
+  historyPanel.classList.toggle('collapsed', !expanded);
+  historyToggleBtn.classList.toggle('expanded', expanded);
+});
+
+// 清空全部历史
+clearHistoryBtn.addEventListener('click', () => {
+  if (!confirm('确定清空所有历史记录？此操作不可恢复。')) return;
+  saveHistory([]);
+  renderHistory();
+  showToast('历史记录已清空');
+});
+
+// 页面加载时渲染历史
+(function initHistory() {
+  renderHistory();
+})();
 
 // ========== 页面加载时恢复预设列表 ==========
 loadPresetList();
