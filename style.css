@@ -23,6 +23,56 @@
   --transition: 0.2s ease;
 }
 
+/* ========== 暗色模式 ========== */
+body.dark {
+  --bg: #0f0f14;
+  --surface: #1a1a24;
+  --surface-hover: #252535;
+  --border: #2a2a3a;
+  --border-focus: #818cf8;
+  --text: #e5e5ec;
+  --text-secondary: #9ca3af;
+  --text-muted: #6b7280;
+  --primary: #818cf8;
+  --primary-hover: #6366f1;
+  --primary-light: #1e1e3a;
+  --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.3), 0 2px 4px rgba(0,0,0,0.2);
+}
+body.dark .chat-bubble pre { background: #0f0f14; color: #d4d4d8; }
+body.dark .chat-bubble code { background: rgba(255,255,255,0.08); }
+body.dark .chat-message.assistant .chat-bubble { background: var(--surface); border-color: var(--border); }
+body.dark .example-blockquote { background: #1a1a28; }
+body.dark .thinking-toggle { background: #2a2a14; }
+body.dark .thinking-content { background: #1a1a14; }
+body.dark .thinking-toggle span { color: #fcd34d; }
+body.dark .error-modal-header { background: #2a1010; }
+body.dark .error-modal-code { background: #0f0f14; }
+body.dark .nsfw-toggle.active { background: #2a1010; }
+body.dark .tag-region { background: #1e1e3a; color: #818cf8; }
+body.dark .tag-era { background: #1e1e2a; color: #9ca3af; }
+body.dark .tag-category { background: #2a2a14; color: #fcd34d; }
+body.dark .avoid-tag { background: #2a1010; color: #fca5a5; border-color: #3a1515; }
+body.dark .author-item:hover { background: var(--surface-hover); }
+body.dark .author-item.active { background: var(--primary-light); }
+body.dark input, body.dark textarea, body.dark select { background: var(--surface); color: var(--text); border-color: var(--border); }
+body.dark input::placeholder, body.dark textarea::placeholder { color: var(--text-muted); }
+body.dark .btn-outline { background: var(--surface); color: var(--text); }
+body.dark .btn-outline:hover { background: var(--primary-light); }
+body.dark .btn-sm { background: var(--surface); color: var(--text-secondary); }
+body.dark .btn-sm:hover { background: var(--surface-hover); }
+body.dark .chat-preset-btn { background: var(--surface); }
+body.dark .chat-preset-btn:hover { background: var(--primary-light); }
+
+/* 暗色模式切换按钮 */
+.dark-toggle {
+  display: flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text-secondary); cursor: pointer;
+  transition: all var(--transition); flex-shrink: 0; font-size: 1.1rem;
+}
+.dark-toggle:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
   background: var(--bg); color: var(--text); line-height: 1.6; min-height: 100vh;

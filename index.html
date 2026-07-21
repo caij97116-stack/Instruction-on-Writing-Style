@@ -11,7 +11,7 @@
     <header class="header">
       <div class="header-left">
         <h1>文风指令生成器</h1>
-        <p class="subtitle">浏览 159 位作家/平台/影视风格，一键生成写作指令</p>
+        <p class="subtitle">浏览 176 位作家/平台/影视风格，一键生成写作指令</p>
       </div>
       <button id="apiToggleBtn" class="api-toggle-btn" title="API 配置">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -19,6 +19,7 @@
           <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
         </svg>
       </button>
+      <button id="darkToggle" class="dark-toggle" title="切换暗色模式">🌙</button>
     </header>
 
     <!-- API 配置面板（隐藏） -->
@@ -220,7 +221,7 @@
               <div class="chat-avatar">🤖</div>
               <div class="chat-bubble">
                 <p>你好！我是<strong>文风指令助手</strong>。</p>
-                <p>我内置了 <strong>159 位作家/平台/影视风格</strong>的详细资料。你可以直接告诉我：</p>
+                <p>我内置了 <strong>176 位作家/平台/影视风格</strong>的详细资料。你可以直接告诉我：</p>
                 <ul>
                   <li>"帮我生成<strong>鲁迅</strong>风格的文风指令"</li>
                   <li>"我想要<strong>村上春树</strong>那种感觉"</li>
@@ -267,6 +268,8 @@
               <button id="chatPackBtn" class="btn-sm btn-outline" title="打包为 TXT" style="display:none;">打包为 TXT</button>
               <button id="chatTavernBtn" class="btn-sm btn-outline" title="打包为酒馆格式" style="display:none;">酒馆格式</button>
               <button id="chatCopyBtn" class="btn-sm btn-outline" title="复制当前指令" style="display:none;">复制</button>
+              <button id="chatExportMdBtn" class="btn-sm btn-outline" title="导出为 Markdown 文件" style="display:none;">导出 MD</button>
+              <button id="chatExportJsonBtn" class="btn-sm btn-outline" title="导出为 JSON 文件" style="display:none;">导出 JSON</button>
               <button id="chatClearBtn" class="btn-sm btn-outline" title="清空当前指令" style="display:none;">清空底层</button>
             </div>
             <div class="chat-presets">
