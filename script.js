@@ -2066,8 +2066,14 @@ function applyFilters() {
     if (currentRegion !== 'all' && author.region !== currentRegion) return false;
     // 时代过滤
     if (currentEra !== 'all' && author.era !== currentEra) return false;
-    // 分类过滤
-    if (currentCategory !== 'all' && author.category !== currentCategory) return false;
+    // 分类过滤：文学作家没有 category 字段，用 undefined 匹配
+    if (currentCategory !== 'all') {
+      if (currentCategory === '文学作家') {
+        if (author.category) return false;
+      } else if (author.category !== currentCategory) {
+        return false;
+      }
+    }
     return true;
   });
   renderAuthorList();
