@@ -269,7 +269,18 @@
               <button id="chatTavernBtn" class="btn-sm btn-outline" title="打包为酒馆格式" style="display:none;">酒馆格式</button>
               <button id="chatCopyBtn" class="btn-sm btn-outline" title="复制当前指令" style="display:none;">复制</button>
               <button id="chatExportMdBtn" class="btn-sm btn-outline" title="导出为 Markdown 文件" style="display:none;">导出 MD</button>
-              <button id="chatExportJsonBtn" class="btn-sm btn-outline" title="导出为 JSON 文件" style="display:none;">导出 JSON</button>
+              <div class="export-dropdown" style="display:none;" id="exportDropdown">
+                <button class="btn-sm btn-outline" id="exportDropdownBtn" title="导出为酒馆/JSON 格式">导出 JSON ▾</button>
+                <div class="export-dropdown-menu" id="exportDropdownMenu">
+                  <div class="export-dropdown-label">— 酒馆适配（预设/角色卡）—</div>
+                  <button class="export-dropdown-item" data-format="tavern-v2">📥 酒馆角色卡 V2</button>
+                  <button class="export-dropdown-item" data-format="tavern-v3">📥 酒馆角色卡 V3</button>
+                  <div class="export-dropdown-label">— 酒馆适配（世界书/知识书）—</div>
+                  <button class="export-dropdown-item" data-format="worldbook">📥 酒馆世界书</button>
+                  <div class="export-dropdown-label">— 通用格式 —</div>
+                  <button class="export-dropdown-item" data-format="generic">📥 通用 JSON</button>
+                </div>
+              </div>
               <button id="chatClearBtn" class="btn-sm btn-outline" title="清空当前指令" style="display:none;">清空底层</button>
             </div>
             <div class="chat-presets">

@@ -2739,7 +2739,9 @@ const chatPackBtn = document.getElementById('chatPackBtn');
 const chatTavernBtn = document.getElementById('chatTavernBtn');
 const chatCopyBtn = document.getElementById('chatCopyBtn');
 const chatExportMdBtn = document.getElementById('chatExportMdBtn');
-const chatExportJsonBtn = document.getElementById('chatExportJsonBtn');
+const exportDropdown = document.getElementById('exportDropdown');
+const exportDropdownBtn = document.getElementById('exportDropdownBtn');
+const exportDropdownMenu = document.getElementById('exportDropdownMenu');
 const chatClearBtn = document.getElementById('chatClearBtn');
 const thinkingAnimation = document.getElementById('thinkingAnimation');
 const thinkingSection = document.getElementById('thinkingSection');
@@ -2875,7 +2877,7 @@ function showQuickActions() {
   chatTavernBtn.style.display = 'inline-flex';
   chatCopyBtn.style.display = 'inline-flex';
   chatExportMdBtn.style.display = 'inline-flex';
-  chatExportJsonBtn.style.display = 'inline-flex';
+  exportDropdown.style.display = 'inline-flex';
   chatClearBtn.style.display = 'inline-flex';
 }
 function hideQuickActions() {
@@ -2884,7 +2886,7 @@ function hideQuickActions() {
   chatTavernBtn.style.display = 'none';
   chatCopyBtn.style.display = 'none';
   chatExportMdBtn.style.display = 'none';
-  chatExportJsonBtn.style.display = 'none';
+  exportDropdown.style.display = 'none';
   chatClearBtn.style.display = 'none';
 }
 
@@ -3039,18 +3041,297 @@ function exportAsMarkdown() {
   downloadFile(currentAiInstruction.authorName + '_写作指令.md', md, 'text/markdown;charset=utf-8');
   showToast('已导出为 Markdown');
 }
-function exportAsJson() {
+
+// ========== 酒馆适配导出格式 ==========
+
+// 提取指令内容中的各章节
+function parseInstructionSections(content) {
+  const sections = {};
+  const lines = content.split('\n');
+  let currentSection = 'preamble';
+  let sectionText = '';
+  for (const line of lines) {
+    if (line.match(/^##\s+[一二三四五六七]/)) {
+      if (currentSection) sections[currentSection] = sectionText.trim();
+      currentSection = line.replace(/^##\s+/, '').trim();
+      sectionText = '';
+    } else {
+      sectionText += line + '\n';
+    }
+  }
+  if (currentSection) sections[currentSection] = sectionText.trim();
+  return sections;
+}
+
+// 酒馆角色卡 V2
+function exportTavernCardV2() {
+  if (!currentAiInstruction) { showToast('没有可导出的指令'); return; }
+  const content = currentAiInstruction.content;
+  const sections = parseInstructionSections(content);
+  const authorName = currentAiInstruction.authorName;
+  const now = new Date().toISOString();
+
+  const card = {
+    spec: 'chara_card_v2',
+    spec_version: '2.0',
+    data: {
+      name: authorName + '风格写作助手',
+      description: '一个精通' + authorName + '写作风格的AI助手，能够分析、模仿和指导该风格的写作。\n\n' + (sections['一、这是什么风格？'] || ''),
+      personality: '你是一个专业的写作风格分析助手。' + (sections['二、具体怎么写？'] || sections['具体怎么写？'] || ''),
+      scenario: '用户正在学习' + authorName + '的写作风格，希望获得专业的写作指导。',
+      first_mes: '你好！我是' + authorName + '风格写作助手。我可以帮你分析' + authorName + '的写作风格，生成详细的写作指令，指导你模仿这种风格进行创作。请告诉我你想了解什么？',
+      mes_example: (sections['四、常用修辞手法'] || '') + '\n\n' + (sections['三、句子和段落安排'] || ''),
+      creator_notes: '由文风指令生成器自动生成。生成时间：' + now,
+      system_prompt: '你是' + authorName + '风格写作助手。\n\n' +
+        '## 风格概述\n' + (sections['一、这是什么风格？'] || '') + '\n\n' +
+        '## 写作方法\n' + (sections['二、具体怎么写？'] || '') + '\n\n' +
+        '## 句子和段落\n' + (sections['三、句子和段落安排'] || '') + '\n\n' +
+        '## 修辞手法\n' + (sections['四、常用修辞手法'] || '') + '\n\n' +
+        '## 整体语气\n' + (sections['五、整体语气和感觉'] || '') + '\n\n' +
+        '## 核心原则\n' + (sections['六、最重要的3条写作原则'] || '') + '\n\n' +
+        '## 禁忌\n' + (sections['七、千万别做的事'] || ''),
+      post_history_instructions: '请始终以' + authorName + '风格写作专家的身份回复，提供专业、具体、可操作的写作建议。',
+      alternate_greetings: ['想要学习' + authorName + '的写作风格吗？让我来帮你分析。'],
+      tags: ['写作', '文风', '风格指令', authorName, '文学'],
+      creator: '文风指令生成器',
+      character_version: '1.0',
+      extensions: { generatedBy: '文风指令生成器', generatedAt: now }
+    }
+  };
+
+  downloadFile(authorName + '_酒馆角色卡V2.json', JSON.stringify(card, null, 2), 'application/json');
+  showToast('已导出为酒馆角色卡 V2');
+}
+
+// 酒馆角色卡 V3
+function exportTavernCardV3() {
+  if (!currentAiInstruction) { showToast('没有可导出的指令'); return; }
+  const content = currentAiInstruction.content;
+  const sections = parseInstructionSections(content);
+  const authorName = currentAiInstruction.authorName;
+  const now = new Date().toISOString();
+
+  const card = {
+    spec: 'chara_card_v3',
+    spec_version: '3.0',
+    data: {
+      name: authorName + '风格写作助手',
+      description: '一个精通' + authorName + '写作风格的AI助手，能够分析、模仿和指导该风格的写作。\n\n' + (sections['一、这是什么风格？'] || ''),
+      personality: '你是一个专业的写作风格分析助手。' + (sections['二、具体怎么写？'] || ''),
+      scenario: '用户正在学习' + authorName + '的写作风格，希望获得专业的写作指导。',
+      first_mes: '你好！我是' + authorName + '风格写作助手。我可以帮你分析' + authorName + '的写作风格，生成详细的写作指令，指导你模仿这种风格进行创作。请告诉我你想了解什么？',
+      mes_example: (sections['四、常用修辞手法'] || '') + '\n\n' + (sections['三、句子和段落安排'] || ''),
+      creator_notes: '由文风指令生成器自动生成。生成时间：' + now,
+      system_prompt: '你是' + authorName + '风格写作助手。\n\n' +
+        '## 风格概述\n' + (sections['一、这是什么风格？'] || '') + '\n\n' +
+        '## 写作方法\n' + (sections['二、具体怎么写？'] || '') + '\n\n' +
+        '## 句子和段落\n' + (sections['三、句子和段落安排'] || '') + '\n\n' +
+        '## 修辞手法\n' + (sections['四、常用修辞手法'] || '') + '\n\n' +
+        '## 整体语气\n' + (sections['五、整体语气和感觉'] || '') + '\n\n' +
+        '## 核心原则\n' + (sections['六、最重要的3条写作原则'] || '') + '\n\n' +
+        '## 禁忌\n' + (sections['七、千万别做的事'] || ''),
+      post_history_instructions: '请始终以' + authorName + '风格写作专家的身份回复，提供专业、具体、可操作的写作建议。',
+      alternate_greetings: ['想要学习' + authorName + '的写作风格吗？让我来帮你分析。'],
+      tags: ['写作', '文风', '风格指令', authorName, '文学'],
+      creator: '文风指令生成器',
+      character_version: '1.0',
+      extensions: {
+        generatedBy: '文风指令生成器',
+        generatedAt: now,
+        talkativeness: 0.5,
+        fav: false,
+        world: 'worldinfo_' + authorName + '.json'
+      }
+    }
+  };
+
+  downloadFile(authorName + '_酒馆角色卡V3.json', JSON.stringify(card, null, 2), 'application/json');
+  showToast('已导出为酒馆角色卡 V3');
+}
+
+// 酒馆世界书
+function exportWorldBook() {
+  if (!currentAiInstruction) { showToast('没有可导出的指令'); return; }
+  const content = currentAiInstruction.content;
+  const sections = parseInstructionSections(content);
+  const authorName = currentAiInstruction.authorName;
+  const now = new Date().toISOString();
+
+  // 把各章节拆成独立条目
+  const entries = {};
+  let uid = 1;
+
+  // 风格概述
+  if (sections['一、这是什么风格？']) {
+    entries['style_overview'] = {
+      uid: uid++,
+      key: [authorName, authorName + '风格', '风格概述'],
+      keysecondary: [],
+      comment: authorName + '风格概述',
+      content: '【' + authorName + '风格概述】\n' + sections['一、这是什么风格？'],
+      constant: false, selective: true, selectiveLogic: 0, addMemo: true,
+      order: 100, position: 0, disable: false, excludeRecursion: false,
+      probability: 100, useProbability: false, group: '', groupOverride: false,
+      groupWeight: 100, scanDepth: null, caseSensitive: false,
+      matchWholeWords: false, useRegex: false, automationId: '', role: 0
+    };
+  }
+
+  // 具体写作方法
+  if (sections['二、具体怎么写？']) {
+    entries['writing_methods'] = {
+      uid: uid++,
+      key: [authorName, '写作方法', '具体怎么写'],
+      keysecondary: [],
+      comment: authorName + '具体写作方法',
+      content: '【' + authorName + '写作方法】\n' + sections['二、具体怎么写？'],
+      constant: false, selective: true, selectiveLogic: 0, addMemo: true,
+      order: 100, position: 0, disable: false, excludeRecursion: false,
+      probability: 100, useProbability: false, group: '', groupOverride: false,
+      groupWeight: 100, scanDepth: null, caseSensitive: false,
+      matchWholeWords: false, useRegex: false, automationId: '', role: 0
+    };
+  }
+
+  // 句子和段落
+  if (sections['三、句子和段落安排']) {
+    entries['sentence_structure'] = {
+      uid: uid++,
+      key: [authorName, '句子', '段落', '句式'],
+      keysecondary: [],
+      comment: authorName + '句子和段落安排',
+      content: '【' + authorName + '句子和段落安排】\n' + sections['三、句子和段落安排'],
+      constant: false, selective: true, selectiveLogic: 0, addMemo: true,
+      order: 100, position: 0, disable: false, excludeRecursion: false,
+      probability: 100, useProbability: false, group: '', groupOverride: false,
+      groupWeight: 100, scanDepth: null, caseSensitive: false,
+      matchWholeWords: false, useRegex: false, automationId: '', role: 0
+    };
+  }
+
+  // 修辞手法
+  if (sections['四、常用修辞手法']) {
+    entries['rhetorical_devices'] = {
+      uid: uid++,
+      key: [authorName, '修辞', '修辞手法', '比喻', '排比'],
+      keysecondary: [],
+      comment: authorName + '常用修辞手法',
+      content: '【' + authorName + '修辞手法】\n' + sections['四、常用修辞手法'],
+      constant: false, selective: true, selectiveLogic: 0, addMemo: true,
+      order: 100, position: 0, disable: false, excludeRecursion: false,
+      probability: 100, useProbability: false, group: '', groupOverride: false,
+      groupWeight: 100, scanDepth: null, caseSensitive: false,
+      matchWholeWords: false, useRegex: false, automationId: '', role: 0
+    };
+  }
+
+  // 整体语气
+  if (sections['五、整体语气和感觉']) {
+    entries['tone_and_feel'] = {
+      uid: uid++,
+      key: [authorName, '语气', '感觉', '氛围'],
+      keysecondary: [],
+      comment: authorName + '整体语气和感觉',
+      content: '【' + authorName + '语气和感觉】\n' + sections['五、整体语气和感觉'],
+      constant: false, selective: true, selectiveLogic: 0, addMemo: true,
+      order: 100, position: 0, disable: false, excludeRecursion: false,
+      probability: 100, useProbability: false, group: '', groupOverride: false,
+      groupWeight: 100, scanDepth: null, caseSensitive: false,
+      matchWholeWords: false, useRegex: false, automationId: '', role: 0
+    };
+  }
+
+  // 核心原则
+  if (sections['六、最重要的3条写作原则']) {
+    entries['core_principles'] = {
+      uid: uid++,
+      key: [authorName, '写作原则', '核心原则', '写作准则'],
+      keysecondary: [],
+      comment: authorName + '最重要的写作原则',
+      content: '【' + authorName + '核心写作原则】\n' + sections['六、最重要的3条写作原则'],
+      constant: false, selective: true, selectiveLogic: 0, addMemo: true,
+      order: 100, position: 0, disable: false, excludeRecursion: false,
+      probability: 100, useProbability: false, group: '', groupOverride: false,
+      groupWeight: 100, scanDepth: null, caseSensitive: false,
+      matchWholeWords: false, useRegex: false, automationId: '', role: 0
+    };
+  }
+
+  // 禁忌
+  if (sections['七、千万别做的事']) {
+    entries['taboos'] = {
+      uid: uid++,
+      key: [authorName, '禁忌', '千万别', '不要', '避免'],
+      keysecondary: [],
+      comment: authorName + '写作禁忌',
+      content: '【' + authorName + '写作禁忌】\n' + sections['七、千万别做的事'],
+      constant: false, selective: true, selectiveLogic: 0, addMemo: true,
+      order: 100, position: 0, disable: false, excludeRecursion: false,
+      probability: 100, useProbability: false, group: '', groupOverride: false,
+      groupWeight: 100, scanDepth: null, caseSensitive: false,
+      matchWholeWords: false, useRegex: false, automationId: '', role: 0
+    };
+  }
+
+  const worldBook = {
+    entries: entries,
+    generatedBy: '文风指令生成器',
+    generatedAt: now,
+    authorName: authorName,
+    description: authorName + '写作风格世界书 - 包含风格概述、写作方法、句子安排、修辞手法、语气感觉、核心原则和禁忌'
+  };
+
+  downloadFile(authorName + '_酒馆世界书.json', JSON.stringify(worldBook, null, 2), 'application/json');
+  showToast('已导出为酒馆世界书');
+}
+
+// 通用 JSON
+function exportGenericJson() {
   if (!currentAiInstruction) { showToast('没有可导出的指令'); return; }
   const json = {
     author: currentAiInstruction.authorName,
     generatedAt: currentAiInstruction.timestamp || new Date().toISOString(),
     instruction: currentAiInstruction.content,
     format: '文风指令',
-    version: '1.0'
+    version: '2.0',
+    note: '此格式为通用JSON，不含酒馆特殊字段。如需酒馆预设/世界书格式，请选择酒馆角色卡或世界书。'
   };
-  downloadFile(currentAiInstruction.authorName + '_写作指令.json', JSON.stringify(json, null, 2), 'application/json');
-  showToast('已导出为 JSON');
+  downloadFile(currentAiInstruction.authorName + '_通用.json', JSON.stringify(json, null, 2), 'application/json');
+  showToast('已导出为通用 JSON');
 }
+
+// 统一导出入口
+const exportFormats = {
+  'tavern-v2': exportTavernCardV2,
+  'tavern-v3': exportTavernCardV3,
+  'worldbook': exportWorldBook,
+  'generic': exportGenericJson
+};
+
+// 下拉菜单切换
+exportDropdownBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  exportDropdownMenu.classList.toggle('show');
+});
+
+// 点击外部关闭下拉菜单
+document.addEventListener('click', (e) => {
+  if (!exportDropdown.contains(e.target)) {
+    exportDropdownMenu.classList.remove('show');
+  }
+});
+
+// 下拉菜单项点击
+exportDropdownMenu.querySelectorAll('.export-dropdown-item').forEach(item => {
+  item.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const format = item.dataset.format;
+    if (exportFormats[format]) {
+      exportFormats[format]();
+    }
+    exportDropdownMenu.classList.remove('show');
+  });
+});
 function clearAiInstruction() {
   currentAiInstruction = null; currentReasoning = null; chatContext = [];
   hideQuickActions();
@@ -3084,7 +3365,6 @@ chatCopyBtn.addEventListener('click', () => {
   navigator.clipboard.writeText(currentAiInstruction.content).then(() => showToast('已复制')).catch(() => showToast('复制失败'));
 });
 chatExportMdBtn.addEventListener('click', exportAsMarkdown);
-chatExportJsonBtn.addEventListener('click', exportAsJson);
 chatClearBtn.addEventListener('click', clearAiInstruction);
 
 // 快速模板按钮
